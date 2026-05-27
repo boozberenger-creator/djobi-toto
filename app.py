@@ -12,7 +12,6 @@ from transformers import (
     VitsModel, AutoTokenizer,
     Wav2Vec2ForCTC, AutoProcessor,
     AutoModelForSeq2SeqLM,
-    MarianMTModel, MarianTokenizer,
 )
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -37,17 +36,11 @@ asr_model.load_adapter("mos")
 asr_model.eval()
 print("  ASR OK")
 
-print("  [3/4] NLLB-200 (Moore->FR)...")
+print("  [3/3] NLLB-200 (Moore<->FR)...")
 nllb_tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
 nllb_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M")
 nllb_model.eval()
 print("  NLLB OK")
-
-print("  [4/4] Helsinki-NLP opus-mt (FR->Moore specialise)...")
-marian_fr_mos_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-fr-mos")
-marian_fr_mos_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-fr-mos")
-marian_fr_mos_model.eval()
-print("  Helsinki-NLP FR->Moore OK")
 
 print("Tous les modeles charges!")
 
@@ -70,22 +63,13 @@ def transcribe_moore(audio_data, sample_rate):
     return asr_processor.decode(ids[0])
 
 
-def translate_fr_to_moore(text):
-    """FR -> Moore via Helsinki-NLP opus-mt (specialise, BLEU 21.1)"""
-    inputs = marian_fr_mos_tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
-    with torch.no_grad():
-        output = marian_fr_mos_model.generate(**inputs, num_beams=4, max_length=256)
-    return marian_fr_mos_tokenizer.decode(output[0], skip_special_tokens=True)
-
-
-def translate_moore_to_fr(text):
-    """Moore -> FR via NLLB-200"""
-    nllb_tokenizer.src_lang = "mos_Latn"
-    inputs = nllb_tokenizer(text, return_tensors="pt", padding=True)
-    if hasattr(nllb_tokenizer, "lang_code_to_id") and "fra_Latn" in nllb_tokenizer.lang_code_to_id:
-        tgt_id = nllb_tokenizer.lang_code_to_id["fra_Latn"]
-    else:
-        tgt_id = nllb_tokenizer.convert_tokens_to_ids("fra_Latn")
+def translate(text, src_lang, tgt_lang):
+    """Traduction via NLLB-200 (Moore<->Francais)"""
+    nllb_tokenizer.src_lang = src_lang
+    inputs = nllb_tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+    # added_tokens_encoder fiable — convert_tokens_to_ids peut retourner UNK
+    tgt_id = (nllb_tokenizer.added_tokens_encoder.get(tgt_lang)
+              or nllb_tokenizer.convert_tokens_to_ids(tgt_lang))
     with torch.no_grad():
         output = nllb_model.generate(
             **inputs,
@@ -94,16 +78,6 @@ def translate_moore_to_fr(text):
             num_beams=4,
         )
     return nllb_tokenizer.decode(output[0], skip_special_tokens=True)
-
-
-def translate(text, src_lang, tgt_lang):
-    """Router: choisit le meilleur modele selon direction"""
-    if src_lang == "fra_Latn" and tgt_lang == "mos_Latn":
-        return translate_fr_to_moore(text)
-    elif src_lang == "mos_Latn" and tgt_lang == "fra_Latn":
-        return translate_moore_to_fr(text)
-    else:
-        return translate_moore_to_fr(text)
 
 
 def synthesize_moore(text):
