@@ -207,6 +207,42 @@ def pipeline_texte(texte_moore, sujet):
     return (sr, audio_out), display_text, trace
 
 
+def pipeline_fr_vers_moore(texte_fr):
+    """Test direct: Francais texte → Moore texte + voix"""
+    if not texte_fr.strip():
+        return None, "Entre du texte francais.", ""
+
+    logs = [f"FR input: '{texte_fr}'"]
+
+    logs.append("Traduction FR -> Moore...")
+    moore_text = translate(texte_fr, "fra_Latn", "mos_Latn")
+    logs.append(f"Moore: '{moore_text}'")
+
+    logs.append("TTS Moore...")
+    sr, audio_out = synthesize_moore(moore_text)
+    logs.append("Audio OK!")
+
+    trace = "\n".join(logs)
+    display = f"Francais: {texte_fr}\n\nMoore: {moore_text}"
+    return (sr, audio_out), display, trace
+
+
+def pipeline_moore_vers_fr(texte_moore):
+    """Test direct: Moore texte → Francais texte + voix FR via gTTS fallback"""
+    if not texte_moore.strip():
+        return "", "Entre du texte Mooré."
+
+    logs = [f"Moore input: '{texte_moore}'"]
+
+    logs.append("Traduction Moore -> FR...")
+    french_text = translate(texte_moore, "mos_Latn", "fra_Latn")
+    logs.append(f"FR: '{french_text}'")
+
+    trace = "\n".join(logs)
+    display = f"Mooré: {texte_moore}\n\nFrançais: {french_text}"
+    return french_text, display
+
+
 # ─── Gradio UI ────────────────────────────────────────────────────────────────
 
 SUJETS = ["Robotique", "Electronique", "Programmation", "Mathematiques", "Sciences"]
@@ -277,6 +313,64 @@ with gr.Blocks(
                 inputs=[texte_input, sujet_text],
                 outputs=[audio_output_t, text_output_t, trace_t],
             )
+
+        with gr.TabItem("🔬 Test Traduction"):
+            gr.Markdown("### Test direct des modèles de traduction (sans Claude)")
+
+            with gr.Tab("Français → Mooré + Voix"):
+                fr_input = gr.Textbox(
+                    placeholder="Bonjour, comment vas-tu?",
+                    label="Texte Français",
+                    lines=3,
+                )
+                btn_fr_moore = gr.Button("Traduire et écouter en Mooré 🔊", variant="primary")
+                audio_fr_moore = gr.Audio(label="Audio Mooré", autoplay=True)
+                text_fr_moore = gr.Textbox(label="Résultat", lines=4)
+                with gr.Accordion("Trace", open=False):
+                    trace_fr_moore = gr.Textbox(lines=5)
+
+                btn_fr_moore.click(
+                    fn=pipeline_fr_vers_moore,
+                    inputs=[fr_input],
+                    outputs=[audio_fr_moore, text_fr_moore, trace_fr_moore],
+                )
+
+                gr.Examples(
+                    examples=[
+                        ["Bonjour, comment vas-tu?"],
+                        ["Un robot est une machine intelligente."],
+                        ["Je veux apprendre la robotique."],
+                        ["Merci beaucoup mon ami."],
+                        ["L'électricité alimente nos machines."],
+                    ],
+                    inputs=[fr_input],
+                )
+
+            with gr.Tab("Mooré → Français"):
+                moore_input2 = gr.Textbox(
+                    placeholder="Laafi bala?",
+                    label="Texte Mooré",
+                    lines=3,
+                )
+                btn_moore_fr = gr.Button("Traduire en Français", variant="primary")
+                text_moore_fr_out = gr.Textbox(label="Résultat", lines=4)
+                trace_moore_fr = gr.Textbox(label="Trace", lines=3)
+
+                btn_moore_fr.click(
+                    fn=pipeline_moore_vers_fr,
+                    inputs=[moore_input2],
+                    outputs=[text_moore_fr_out, trace_moore_fr],
+                )
+
+                gr.Examples(
+                    examples=[
+                        ["Laafi bala?"],
+                        ["Baraka"],
+                        ["Yaa sooma"],
+                        ["M soaba"],
+                    ],
+                    inputs=[moore_input2],
+                )
 
         with gr.TabItem("ℹ️ Comment ça marche"):
             gr.Markdown("""
