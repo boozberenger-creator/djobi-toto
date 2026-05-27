@@ -36,11 +36,11 @@ asr_model.load_adapter("mos")
 asr_model.eval()
 print("  ASR OK")
 
-print("  [3/3] NLLB-200 (Moore<->FR)...")
-nllb_tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
-nllb_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M")
+print("  [3/3] NLLB-200 1.3B (Moore<->FR)...")
+nllb_tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-1.3B")
+nllb_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-1.3B")
 nllb_model.eval()
-print("  NLLB OK")
+print("  NLLB 1.3B OK")
 
 print("Tous les modeles charges!")
 
@@ -78,6 +78,12 @@ def translate(text, src_lang, tgt_lang):
             num_beams=4,
         )
     return nllb_tokenizer.decode(output[0], skip_special_tokens=True)
+
+
+_t1 = translate("Bonjour", "fra_Latn", "mos_Latn")
+_t2 = translate("Laafi bala", "mos_Latn", "fra_Latn")
+print(f"Test trad FR->Moore: 'Bonjour' => '{_t1}'")
+print(f"Test trad Moore->FR: 'Laafi bala' => '{_t2}'")
 
 
 def synthesize_moore(text):
