@@ -65,10 +65,14 @@ def transcribe_moore(audio_data, sample_rate):
 
 
 def translate(text, src_lang, tgt_lang):
-    """Traduction NLLB"""
+    """Traduction NLLB — compatible transformers 4.x et 5.x"""
     nllb_tokenizer.src_lang = src_lang
     inputs = nllb_tokenizer(text, return_tensors="pt", padding=True)
-    tgt_id = nllb_tokenizer.lang_code_to_id[tgt_lang]
+    # lang_code_to_id supprime en transformers 5.x → fallback convert_tokens_to_ids
+    if hasattr(nllb_tokenizer, "lang_code_to_id") and tgt_lang in nllb_tokenizer.lang_code_to_id:
+        tgt_id = nllb_tokenizer.lang_code_to_id[tgt_lang]
+    else:
+        tgt_id = nllb_tokenizer.convert_tokens_to_ids(tgt_lang)
     with torch.no_grad():
         output = nllb_model.generate(
             **inputs,
