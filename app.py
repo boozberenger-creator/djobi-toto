@@ -6,16 +6,18 @@ import os
 import numpy as np
 import gradio as gr
 import torch
-import anthropic
 from transformers import (
     VitsModel, AutoTokenizer,
     Wav2Vec2ForCTC, AutoProcessor,
     AutoModelForSeq2SeqLM,
 )
 
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+GROQ_MODEL = "llama-3.1-8b-instant"
 CLAUDE_MODEL = "claude-haiku-4-5-20251001"
-USE_LOCAL_TRANSLATION = not bool(ANTHROPIC_API_KEY)
+USE_API = bool(GROQ_API_KEY) or bool(ANTHROPIC_API_KEY)
+USE_LOCAL_TRANSLATION = not USE_API
 
 # ─── Model loading ────────────────────────────────────────────────────────────
 
@@ -37,7 +39,7 @@ asr_model.eval()
 print("  ASR OK")
 
 if USE_LOCAL_TRANSLATION:
-    print("  [3/3] NLLB-200 600M (pas de cle Claude)...")
+    print("  [3/3] NLLB-200 600M (pas de cle API)...")
     nllb_tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
     nllb_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M")
     nllb_model.eval()
@@ -45,7 +47,8 @@ if USE_LOCAL_TRANSLATION:
 else:
     nllb_tokenizer = None
     nllb_model = None
-    print("  [3/3] Cle Claude trouvee — traduction via API (rapide!)")
+    api_name = "Groq" if GROQ_API_KEY else "Claude"
+    print(f"  [3/3] Cle {api_name} trouvee — traduction via API (rapide!)")
 
 print("Tous les modeles charges!")
 
@@ -67,38 +70,50 @@ def transcribe_moore(audio_data, sample_rate):
 
 
 def translate(text, src_lang, tgt_lang):
-    """Traduction: Claude API si dispo, sinon NLLB-600M"""
+    """Traduction: Groq > Claude > NLLB-600M"""
     if not text.strip():
         return ""
+    if GROQ_API_KEY:
+        return _translate_api(text, src_lang, tgt_lang, provider="groq")
     if ANTHROPIC_API_KEY:
-        return _translate_claude(text, src_lang, tgt_lang)
+        return _translate_api(text, src_lang, tgt_lang, provider="claude")
     return _translate_nllb(text, src_lang, tgt_lang)
 
 
-def _translate_claude(text, src_lang, tgt_lang):
+def _translate_api(text, src_lang, tgt_lang, provider="groq"):
     lang_names = {
         "fra_Latn": "French",
-        "mos_Latn": "Mooré (Mossi, Burkina Faso — Latin script with characters: ã ẽ ĩ ũ ʋ ɩ ŋ)",
+        "mos_Latn": "Mooré (Mossi language from Burkina Faso, Latin script, special chars: ã ẽ ĩ ũ ʋ ɩ ŋ)",
     }
     src = lang_names.get(src_lang, src_lang)
     tgt = lang_names.get(tgt_lang, tgt_lang)
+    prompt = (
+        f"Translate the following {src} text to {tgt}. "
+        "Return ONLY the translation, nothing else.\n\n"
+        f"{text}"
+    )
     try:
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        msg = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=400,
-            messages=[{
-                "role": "user",
-                "content": (
-                    f"Translate the following {src} text to {tgt}. "
-                    "Return ONLY the translation, no explanation.\n\n"
-                    f"{text}"
-                ),
-            }],
-        )
-        return msg.content[0].text.strip()
+        if provider == "groq":
+            from groq import Groq
+            client = Groq(api_key=GROQ_API_KEY)
+            resp = client.chat.completions.create(
+                model=GROQ_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=400,
+                temperature=0.1,
+            )
+            return resp.choices[0].message.content.strip()
+        else:
+            import anthropic as _ant
+            client = _ant.Anthropic(api_key=ANTHROPIC_API_KEY)
+            msg = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=400,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return msg.content[0].text.strip()
     except Exception as e:
-        print(f"Claude translate error: {e}")
+        print(f"{provider} translate error: {e}")
         if nllb_model:
             return _translate_nllb(text, src_lang, tgt_lang)
         return text
@@ -130,25 +145,41 @@ def synthesize_moore(text):
 
 
 def ask_claude(question_fr, subject="robotique"):
-    """Claude repond en francais (pedagogique)"""
-    if not ANTHROPIC_API_KEY:
-        return _fallback_response(question_fr, subject)
-    try:
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        system = (
-            f"Tu es un professeur patient qui enseigne {subject} a des enfants de 8-14 ans au Burkina Faso. "
-            "Reponds en 2-3 phrases courtes, vocabulaire simple, exemples du quotidien africain."
-        )
-        msg = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=200,
-            system=system,
-            messages=[{"role": "user", "content": question_fr}],
-        )
-        return msg.content[0].text
-    except Exception as e:
-        print(f"Claude error: {e}")
-        return _fallback_response(question_fr, subject)
+    """Reponse pedagogique: Groq > Claude > fallback"""
+    system = (
+        f"Tu es un professeur patient qui enseigne {subject} a des enfants de 8-14 ans au Burkina Faso. "
+        "Reponds en 2-3 phrases courtes, vocabulaire simple, exemples du quotidien africain."
+    )
+    if GROQ_API_KEY:
+        try:
+            from groq import Groq
+            client = Groq(api_key=GROQ_API_KEY)
+            resp = client.chat.completions.create(
+                model=GROQ_MODEL,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": question_fr},
+                ],
+                max_tokens=200,
+                temperature=0.7,
+            )
+            return resp.choices[0].message.content
+        except Exception as e:
+            print(f"Groq error: {e}")
+    if ANTHROPIC_API_KEY:
+        try:
+            import anthropic as _ant
+            client = _ant.Anthropic(api_key=ANTHROPIC_API_KEY)
+            msg = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=200,
+                system=system,
+                messages=[{"role": "user", "content": question_fr}],
+            )
+            return msg.content[0].text
+        except Exception as e:
+            print(f"Claude error: {e}")
+    return _fallback_response(question_fr, subject)
 
 
 def _fallback_response(question_fr, subject):
@@ -258,7 +289,12 @@ def pipeline_moore_vers_fr(texte_moore):
 # ─── UI ───────────────────────────────────────────────────────────────────────
 
 SUJETS = ["Robotique", "Electronique", "Programmation", "Mathematiques", "Sciences"]
-translation_mode = "Claude API" if ANTHROPIC_API_KEY else "NLLB-600M (local)"
+if GROQ_API_KEY:
+    translation_mode = "Groq (Llama 3.1)"
+elif ANTHROPIC_API_KEY:
+    translation_mode = "Claude Haiku"
+else:
+    translation_mode = "NLLB-600M (local)"
 
 with gr.Blocks(
     title="Djobi Toto - Education en Moore",
