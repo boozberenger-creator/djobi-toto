@@ -12,6 +12,7 @@ from transformers import (
     VitsModel, AutoTokenizer,
     Wav2Vec2ForCTC, AutoProcessor,
     AutoModelForSeq2SeqLM,
+    MarianMTModel, MarianTokenizer,
 )
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -36,11 +37,17 @@ asr_model.load_adapter("mos")
 asr_model.eval()
 print("  ASR OK")
 
-print("  [3/3] NLLB-200 1.3B (Moore<->FR)...")
+print("  [3/4] NLLB-200 1.3B (Moore->FR)...")
 nllb_tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-1.3B")
 nllb_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-1.3B")
 nllb_model.eval()
 print("  NLLB 1.3B OK")
+
+print("  [4/4] opus-mt-fr-mos fine-tune (FR->Moore)...")
+opus_tokenizer = MarianTokenizer.from_pretrained("hfdjobii/opus-mt-fr-mos-finetuned")
+opus_model = MarianMTModel.from_pretrained("hfdjobii/opus-mt-fr-mos-finetuned")
+opus_model.eval()
+print("  opus-mt fine-tune OK")
 
 print("Tous les modeles charges!")
 
@@ -64,10 +71,15 @@ def transcribe_moore(audio_data, sample_rate):
 
 
 def translate(text, src_lang, tgt_lang):
-    """Traduction via NLLB-200 (Moore<->Francais)"""
+    """FR->Moore: opus-mt fine-tune | Moore->FR: NLLB-200"""
+    if src_lang == "fra_Latn" and tgt_lang == "mos_Latn":
+        inputs = opus_tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
+        with torch.no_grad():
+            output = opus_model.generate(**inputs, num_beams=4, max_length=256)
+        return opus_tokenizer.decode(output[0], skip_special_tokens=True)
+
     nllb_tokenizer.src_lang = src_lang
     inputs = nllb_tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
-    # added_tokens_encoder fiable — convert_tokens_to_ids peut retourner UNK
     tgt_id = (nllb_tokenizer.added_tokens_encoder.get(tgt_lang)
               or nllb_tokenizer.convert_tokens_to_ids(tgt_lang))
     with torch.no_grad():
@@ -395,7 +407,8 @@ with gr.Blocks(
 
             ## Modèles utilisés
             - **MMS** (Massively Multilingual Speech) — Meta AI — supporte >1000 langues dont le Mooré
-            - **NLLB-200** (No Language Left Behind) — Meta AI — traduction 200 langues dont le Mooré
+            - **NLLB-200** (No Language Left Behind) — Meta AI — traduction Mooré→Français
+            - **opus-mt-fr-mos fine-tuné** — Helsinki-NLP + fine-tuning FLORES+ — traduction Français→Mooré
             - **Claude** (Anthropic) — Génération de contenu pédagogique
 
             ## Mission
