@@ -220,13 +220,17 @@ function ReadAloud() {
   const [voice, setVoice]     = useState('djobi');
   const [text, setText]       = useState("Yʋʋmd koom na n niẽ beoogo. Tũm-tũmd fãa segd n gũ a koodo. DJOBI TOTO na n karem-a-la ne a buud-goamã, tɩ ned fãa wʋm.");
   const [rate, setRate]       = useState(1.0);
+  const [pitch, setPitch]     = useState(1.0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg]   = useState('');
+  const [dlUrl, setDlUrl]     = useState(null);
   const audioRef = useRef(null);
+  const ctxRef   = useRef(null);
 
   const stopCurrent = useCallback(() => {
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    if (audioRef.current) { audioRef.current.stop?.(); audioRef.current = null; }
+    if (ctxRef.current)   { ctxRef.current.close().catch(()=>{}); ctxRef.current = null; }
     setPlaying(false);
     setLoading(false);
   }, []);
@@ -243,22 +247,39 @@ function ReadAloud() {
         body: JSON.stringify({ text: textToPlay, voice: voiceName }),
       });
       if (!res.ok) throw new Error(`Erreur synthèse (${res.status})`);
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current  = audio;
-      audio.playbackRate = rate;
+      const arrayBuf = await res.arrayBuffer();
+
+      // Stocker pour le téléchargement
+      const blob = new Blob([arrayBuf], { type: 'audio/wav' });
+      const blobUrl = URL.createObjectURL(blob);
+      setDlUrl(blobUrl);
+
+      // Lecture via AudioContext : pitch (detune) et rate séparés
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctxRef.current = ctx;
+      const decoded = await ctx.decodeAudioData(arrayBuf.slice(0));
+      const src = ctx.createBufferSource();
+      src.buffer = decoded;
+      src.playbackRate.value = rate;
+      src.detune.value = (pitch - 1.0) * 1200;
+      src.connect(ctx.destination);
+      audioRef.current = src;
       setLoading(false);
       setPlaying(true);
-      audio.onended = () => { setPlaying(false); URL.revokeObjectURL(url); audioRef.current = null; };
-      audio.play();
+      src.onended = () => {
+        setPlaying(false);
+        audioRef.current = null;
+        ctx.close().catch(() => {});
+        ctxRef.current = null;
+      };
+      src.start();
     } catch (e) {
       setErrMsg('Synthèse échouée — réessaie dans quelques secondes.');
       console.error('[TTS]', e);
     } finally {
       setLoading(false);
     }
-  }, [rate, stopCurrent]);
+  }, [rate, pitch, stopCurrent]);
 
   const toggle = useCallback(() => {
     if (playing || loading) { stopCurrent(); return; }
@@ -301,9 +322,14 @@ function ReadAloud() {
 
       <div className="tts-controls">
         <div className="slider-block">
-          <div className="sl-top"><span>Vitesse lecture</span><b>{rate.toFixed(2)}×</b></div>
+          <div className="sl-top"><span>Vitesse</span><b>{rate.toFixed(2)}×</b></div>
           <input className="sl" type="range" min="0.5" max="1.6" step="0.05" value={rate}
-            onChange={(e) => { setRate(parseFloat(e.target.value)); if (audioRef.current) audioRef.current.playbackRate = parseFloat(e.target.value); }} />
+            onChange={(e) => { setRate(parseFloat(e.target.value)); if (audioRef.current?.playbackRate) audioRef.current.playbackRate.value = parseFloat(e.target.value); }} />
+        </div>
+        <div className="slider-block">
+          <div className="sl-top"><span>Hauteur</span><b>{pitch.toFixed(2)}</b></div>
+          <input className="sl" type="range" min="0.5" max="1.6" step="0.05" value={pitch}
+            onChange={(e) => { setPitch(parseFloat(e.target.value)); if (audioRef.current?.detune) audioRef.current.detune.value = (parseFloat(e.target.value) - 1.0) * 1200; }} />
         </div>
       </div>
 
@@ -319,6 +345,12 @@ function ReadAloud() {
         <div className={'tts-bigwave' + (busy ? ' on' : '')}>
           {Array.from({ length: 18 }).map((_, i) => <i key={i}></i>)}
         </div>
+        {dlUrl && (
+          <a className="tts-dl" href={dlUrl} download="djobi-tts.wav">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"></path></svg>
+            Télécharger
+          </a>
+        )}
       </div>
       <p className="demo-note">{loading ? 'Génération en cours (~2 s)…' : 'Synthèse vocale mooré — XTTS v2 fine-tuné par Djobi Toto.'}</p>
     </div>

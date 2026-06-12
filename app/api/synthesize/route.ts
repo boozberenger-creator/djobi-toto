@@ -73,8 +73,12 @@ export async function POST(req: NextRequest) {
       throw new Error("Aucune URL audio dans la réponse du Space");
     }
 
+    // Le proxy HF sert les fichiers sous /grad/gradio_api/file= (308 redirect).
+    // On utilise directement /gradio_api/file= qui retourne 200.
+    const fetchUrl = audioUrl.replace("/grad/gradio_api/file=", "/gradio_api/file=");
+
     // 3. Télécharger le fichier audio et le retourner au client
-    const audioRes = await fetch(audioUrl, {
+    const audioRes = await fetch(fetchUrl, {
       headers: {
         ...(HF_TOKEN && { Authorization: `Bearer ${HF_TOKEN}` }),
       },
