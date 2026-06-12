@@ -20,6 +20,9 @@ const TTS_VOICES = [
   { id: 'rama',  name: 'Ramata',   lang: 'Mooré · clair',   img: '',                           slot: 'tts-6', coming: true },
 ];
 
+const TTS_API  = 'https://hfdjobii-djobi-tts-demo.hf.space';
+const VOICE_MAP = { djobi: 'Djobi (Voix 1)', salim: 'Salimata (Voix 2)', aicha: 'Aicha (Voix 3)' };
+
 const TRANSCRIPT_SAMPLE =
   "Bonjour, je voudrais savoir comment préparer la solution de réhydratation pour mon enfant qui a la diarrhée, et quand il faut aller au centre de santé.";
 
@@ -215,18 +218,79 @@ function Transcription() {
    TOOL 3 — Lecture à voix haute
    ============================================================ */
 function ReadAloud() {
-  const [voice, setVoice] = useState('djobi');
-  const [text, setText] = useState("Yʋʋmd koom na n niẽ beoogo. Tũm-tũmd fãa segd n gũ a koodo. DJOBI TOTO na n karem-a-la ne a buud-goamã, tɩ ned fãa wʋm.");
-  const [rate, setRate] = useState(0.95);
-  const [pitch, setPitch] = useState(1);
+  const [voice, setVoice]     = useState('djobi');
+  const [text, setText]       = useState("Yʋʋmd koom na n niẽ beoogo. Tũm-tũmd fãa segd n gũ a koodo. DJOBI TOTO na n karem-a-la ne a buud-goamã, tɩ ned fãa wʋm.");
+  const [rate, setRate]       = useState(1.0);
   const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errMsg, setErrMsg]   = useState('');
+  const audioRef = useRef(null);
 
-  const toggle = () => {
-    if (playing) { window.speechSynthesis.cancel(); setPlaying(false); return; }
-    setPlaying(true);
-    speak(text, rate, pitch, () => setPlaying(false));
-  };
-  useEffect(() => () => window.speechSynthesis && window.speechSynthesis.cancel(), []);
+  const stopCurrent = useCallback(() => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setPlaying(false);
+    setLoading(false);
+  }, []);
+
+  const playTTS = useCallback(async (textToPlay, voiceId) => {
+    stopCurrent();
+    setErrMsg('');
+    const voiceName = VOICE_MAP[voiceId] || 'Djobi (Voix 1)';
+    setLoading(true);
+    try {
+      const submitRes = await fetch(`${TTS_API}/gradio_api/call/synthesize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: [textToPlay, voiceName] }),
+      });
+      if (!submitRes.ok) throw new Error(`Erreur serveur (${submitRes.status})`);
+      const { event_id } = await submitRes.json();
+
+      const streamRes = await fetch(`${TTS_API}/gradio_api/call/synthesize/${event_id}`);
+      const reader    = streamRes.body.getReader();
+      const decoder   = new TextDecoder();
+      let buf = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          try {
+            const parsed = JSON.parse(line.slice(5));
+            if (Array.isArray(parsed) && parsed[0]?.url) {
+              const audio = new Audio(parsed[0].url);
+              audioRef.current  = audio;
+              audio.playbackRate = rate;
+              setLoading(false);
+              setPlaying(true);
+              audio.onended = () => { setPlaying(false); audioRef.current = null; };
+              audio.play();
+              return;
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (e) {
+      setErrMsg('Synthèse échouée — réessaie dans quelques secondes.');
+      console.error('[TTS]', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [rate, stopCurrent]);
+
+  const toggle = useCallback(() => {
+    if (playing || loading) { stopCurrent(); return; }
+    if (!text.trim()) return;
+    playTTS(text.trim(), voice);
+  }, [playing, loading, text, voice, playTTS, stopCurrent]);
+
+  useEffect(() => () => stopCurrent(), [stopCurrent]);
+
+  const busy = playing || loading;
 
   return (
     <div className="tool-panel fadeslide">
@@ -245,7 +309,7 @@ function ReadAloud() {
             <div className="lg">{v.lang}</div>
             <button className="pp" aria-label={'Prévisualiser ' + v.name}
               disabled={v.coming}
-              onClick={(e) => { e.stopPropagation(); if (!v.coming) { setVoice(v.id); speak('Ne y windga, mam yaa ' + v.name + '.', rate, pitch); } }}>
+              onClick={(e) => { e.stopPropagation(); if (!v.coming) { setVoice(v.id); playTTS('Ne y windga.', v.id); } }}>
               <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
             </button>
           </div>
@@ -255,29 +319,30 @@ function ReadAloud() {
       <textarea className="tts-text" value={text} onChange={(e) => setText(e.target.value)}
         placeholder="Colle ou écris le texte à lire…"></textarea>
 
+      {errMsg && <p style={{ color: '#c0392b', fontSize: 13, margin: '4px 0 0' }}>{errMsg}</p>}
+
       <div className="tts-controls">
         <div className="slider-block">
-          <div className="sl-top"><span>Vitesse</span><b>{rate.toFixed(2)}×</b></div>
-          <input className="sl" type="range" min="0.5" max="1.6" step="0.05" value={rate} onChange={(e) => setRate(parseFloat(e.target.value))} />
-        </div>
-        <div className="slider-block">
-          <div className="sl-top"><span>Hauteur</span><b>{pitch.toFixed(2)}</b></div>
-          <input className="sl" type="range" min="0.5" max="1.6" step="0.05" value={pitch} onChange={(e) => setPitch(parseFloat(e.target.value))} />
+          <div className="sl-top"><span>Vitesse lecture</span><b>{rate.toFixed(2)}×</b></div>
+          <input className="sl" type="range" min="0.5" max="1.6" step="0.05" value={rate}
+            onChange={(e) => { setRate(parseFloat(e.target.value)); if (audioRef.current) audioRef.current.playbackRate = parseFloat(e.target.value); }} />
         </div>
       </div>
 
       <div className="tts-play-row">
-        <button className="tts-play" onClick={toggle} aria-label={playing ? 'Arrêter' : 'Lire'}>
+        <button className="tts-play" onClick={toggle} aria-label={busy ? 'Arrêter' : 'Lire'}
+          style={loading ? { opacity: 0.7 } : {}}>
           {playing
             ? <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"></path></svg>
-            : <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>}
+            : loading
+              ? <svg viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><path d="M12 2a10 10 0 0 1 10 10" fill="none" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              : <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>}
         </button>
-        <div className={'tts-bigwave' + (playing ? ' on' : '')}>
+        <div className={'tts-bigwave' + (busy ? ' on' : '')}>
           {Array.from({ length: 18 }).map((_, i) => <i key={i}></i>)}
         </div>
-        <button className="tts-dl"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"></path></svg> Télécharger en MP3</button>
       </div>
-      <p className="demo-note">Démo — synthèse via le navigateur ; les voix locales mooré/dioula sont simulées.</p>
+      <p className="demo-note">{loading ? 'Génération en cours (~2 s)…' : 'Synthèse vocale mooré — XTTS v2 fine-tuné par Djobi Toto.'}</p>
     </div>
   );
 }
