@@ -1,0 +1,311 @@
+/* ============================================================
+   DJOBI TOTO — Espace Enfants
+   Warm, joyful, audio-first. Builds on styles.css tokens.
+   ============================================================ */
+
+body.kids {
+  --k-bg:     #FAF1E0;   /* crème chaude */
+  --k-sand:   #F0E0C2;
+  --k-cream:  #FDF6E8;
+  --k-card:   #FFFCF5;
+
+  --k-red:    #EF2B2D;   /* histoires */
+  --k-green:  #009E49;   /* école */
+  --k-yellow: #FCD116;   /* comptines */
+  --k-sky:    #5BC0EB;
+  --k-mango:  #FF8C42;
+  --k-rose:   #E8718B;
+  --terra:    #A0421C;
+  --terra-lite:#C5562E;
+
+  --k-ink:    #3A2A1B;   /* brun chaud foncé */
+  --k-soft:   #7A5C42;
+  --k-faint:  #A8927C;
+
+  --k-title: 'Fraunces', Georgia, serif;
+  --k-hand:  'Caveat', 'Comic Sans MS', cursive;
+  --k-sans:  'Manrope', -apple-system, sans-serif;
+
+  --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease:   cubic-bezier(0.16, 1, 0.3, 1);
+
+  background: var(--k-bg);
+  color: var(--k-ink);
+  font-family: var(--k-sans);
+}
+
+body.kids h1, body.kids h2, body.kids h3 {
+  font-family: var(--k-title);
+  font-weight: 500;
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+  line-height: 1.02;
+  margin: 0;
+}
+
+.kwrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 40px); }
+
+/* ============================================================
+   TOP BAR (warm, kid-friendly)
+   ============================================================ */
+.kbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px clamp(16px, 4vw, 36px);
+  background: color-mix(in oklab, var(--k-bg) 80%, transparent);
+  backdrop-filter: saturate(150%) blur(16px); -webkit-backdrop-filter: saturate(150%) blur(16px);
+  border-bottom: 2px solid color-mix(in oklab, var(--terra) 12%, transparent);
+}
+.kbar__brand { display: flex; align-items: center; gap: 10px; }
+.kbar__brand .logo-mark { width: 32px; height: 32px; }
+.kbar__brand .logo-word { font-weight: 700; letter-spacing: 0.12em; font-size: 14px; color: var(--k-ink); }
+.kbar__tag { font-family: var(--k-hand); font-size: 21px; color: var(--terra); margin-left: 2px; line-height: 1; }
+.kbar__home { font-size: 13.5px; font-weight: 600; color: var(--k-soft); display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 100px; transition: background .3s var(--ease); }
+.kbar__home:hover { background: var(--k-sand); }
+
+/* ============================================================
+   UNIVERSAL VOICE BUTTON
+   ============================================================ */
+.say {
+  border: none; cursor: pointer; background: var(--terra); color: #fff;
+  border-radius: 50%; display: inline-grid; place-items: center; flex: 0 0 auto;
+  width: 64px; height: 64px; position: relative;
+  box-shadow: 0 10px 26px -12px color-mix(in oklab, var(--terra) 75%, transparent);
+  transition: transform .35s var(--bounce), background .3s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.say:hover { background: var(--terra-lite); }
+.say:active { transform: scale(0.92); }
+.say.speaking { animation: sayPulse 1s var(--ease) infinite; }
+.say svg { width: 50%; height: 50%; fill: #fff; }
+@keyframes sayPulse { 0%,100% { box-shadow: 0 10px 26px -12px color-mix(in oklab, var(--terra) 75%, transparent), 0 0 0 0 color-mix(in oklab, var(--terra) 45%, transparent); } 50% { box-shadow: 0 10px 26px -12px color-mix(in oklab, var(--terra) 75%, transparent), 0 0 0 16px transparent; } }
+.say.lg { width: 120px; height: 120px; }
+.say.xl { width: 132px; height: 132px; }
+
+/* tiny floating "écouter" label that appears near a hovered sayable */
+.say-hint { font-family: var(--k-hand); font-size: 20px; color: var(--terra); }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.khero { position: relative; min-height: 100svh; padding: 96px 0 0; overflow: hidden; display: flex; flex-direction: column; }
+.khero__pattern { position: absolute; inset: 0; z-index: 0; opacity: 0.14; pointer-events: none; }
+.khero__top { position: relative; z-index: 3; flex: 1; display: grid; grid-template-columns: 0.9fr 1.1fr; align-items: center; gap: 20px; max-width: 1180px; margin: 0 auto; width: 100%; padding: 10px clamp(20px, 4vw, 40px) 0; }
+
+/* Mascot */
+.mascot { position: relative; width: 100%; max-width: 360px; justify-self: center; }
+.mascot svg { width: 100%; height: auto; overflow: visible; display: block; filter: drop-shadow(0 24px 30px rgba(58,42,27,0.18)); }
+.mascot-bubble {
+  position: absolute; top: 4%; right: -6%; background: #fff; border: 2px solid var(--k-sand);
+  border-radius: 22px 22px 22px 6px; padding: 12px 18px; font-family: var(--k-hand); font-size: 26px;
+  color: var(--terra); box-shadow: 0 12px 28px -16px rgba(58,42,27,0.4);
+  animation: bob 3.5s var(--ease) infinite;
+}
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+/* mascot micro-animations */
+.m-ear-l { transform-box: fill-box; transform-origin: bottom center; animation: earL 4s var(--ease) infinite; }
+.m-ear-r { transform-box: fill-box; transform-origin: bottom center; animation: earR 4.6s var(--ease) infinite; }
+@keyframes earL { 0%,88%,100% { transform: rotate(0deg);} 92% { transform: rotate(-7deg);} 96% { transform: rotate(3deg);} }
+@keyframes earR { 0%,80%,100% { transform: rotate(0deg);} 86% { transform: rotate(8deg);} 92% { transform: rotate(-3deg);} }
+.m-eye { transform-box: fill-box; transform-origin: center; animation: blink 5s steps(1) infinite; }
+@keyframes blink { 0%,93%,100% { transform: scaleY(1);} 95% { transform: scaleY(0.1);} 97% { transform: scaleY(1);} }
+.m-arm { transform-box: fill-box; transform-origin: 75% 20%; animation: wave 4.5s var(--ease) infinite; }
+@keyframes wave { 0%,70%,100% { transform: rotate(0deg);} 80% { transform: rotate(-16deg);} 90% { transform: rotate(-6deg);} }
+
+/* Greeting */
+.khero__say { position: relative; }
+.khero__eyebrow { font-family: var(--k-hand); font-size: clamp(24px, 3vw, 32px); color: var(--k-green); }
+.khero h1 { font-size: clamp(56px, 9vw, 104px); color: var(--terra); margin: 4px 0 0; }
+.khero__sub { margin-top: 18px; font-size: clamp(18px, 2.2vw, 23px); color: var(--k-soft); font-weight: 500; max-width: 440px; }
+.khero__cta { display: flex; align-items: center; gap: 18px; margin-top: 34px; }
+.khero__cta .say-hint { font-size: 24px; }
+
+/* kids photo blended at the bottom */
+.khero__photo { position: relative; z-index: 1; width: 100%; height: clamp(220px, 30vh, 360px); margin-top: -2%; }
+.khero__photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 38%; }
+.khero__photo::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, var(--k-bg) 0%, color-mix(in oklab, var(--k-bg) 55%, transparent) 22%, transparent 55%),
+    linear-gradient(0deg, color-mix(in oklab, var(--k-bg) 70%, transparent) 0%, transparent 30%);
+}
+.khero__photo-cap {
+  position: absolute; z-index: 2; left: 50%; bottom: 16px; transform: translateX(-50%);
+  font-family: var(--k-hand); font-size: 22px; color: #fff; text-shadow: 0 2px 10px rgba(58,42,27,.6);
+  background: color-mix(in oklab, var(--terra) 78%, transparent); padding: 6px 18px; border-radius: 100px;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   SECTION SHELL
+   ============================================================ */
+.ksec { padding: clamp(56px, 8vw, 100px) 0; position: relative; }
+.ksec__head { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
+.ksec__head .mini-mascot { width: 56px; height: 56px; flex: 0 0 auto; }
+.ksec__head h2 { font-size: clamp(34px, 5vw, 60px); color: var(--k-ink); }
+.ksec__head .say { width: 52px; height: 52px; }
+
+/* ============================================================
+   4 UNIVERS GRID
+   ============================================================ */
+.univers4 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.ucard {
+  position: relative; border-radius: 30px; padding: 34px; min-height: 340px; cursor: pointer;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--k-card); border: 2px solid color-mix(in oklab, var(--ucol) 22%, transparent);
+  transition: transform .5s var(--bounce), box-shadow .5s var(--ease);
+}
+.ucard:hover { transform: rotate(-1deg) translateY(-6px); box-shadow: 0 34px 60px -36px color-mix(in oklab, var(--ucol) 70%, transparent); }
+.ucard__glow { position: absolute; inset: 0; z-index: 0; background: radial-gradient(120% 90% at 88% 8%, color-mix(in oklab, var(--ucol) 18%, transparent), transparent 60%); pointer-events: none; }
+.ucard__pattern { position: absolute; right: -30px; bottom: -30px; width: 220px; height: 220px; z-index: 0; opacity: 0.12; color: var(--ucol); pointer-events: none; }
+.ucard > * { position: relative; z-index: 1; }
+.ucard__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ucard__ic { width: 92px; height: 92px; border-radius: 24px; display: grid; place-items: center; background: color-mix(in oklab, var(--ucol) 14%, #fff); flex: 0 0 auto; transition: transform .5s var(--bounce); }
+.ucard:hover .ucard__ic { transform: scale(1.08) rotate(4deg); }
+.ucard__ic svg { width: 56px; height: 56px; }
+.ucard h3 { font-size: clamp(30px, 3.6vw, 42px); color: var(--ucol); margin-top: 26px; }
+.ucard p { margin-top: 12px; font-size: 16.5px; line-height: 1.5; color: var(--k-soft); font-weight: 500; max-width: 92%; }
+.ucard__items { margin-top: auto; padding-top: 22px; display: flex; flex-wrap: wrap; gap: 9px; }
+.ucard__chip {
+  font-size: 14.5px; font-weight: 600; color: var(--k-ink); background: color-mix(in oklab, var(--ucol) 12%, #fff);
+  border: 1.5px solid color-mix(in oklab, var(--ucol) 28%, transparent); padding: 8px 15px; border-radius: 100px;
+  cursor: pointer; transition: all .3s var(--bounce); display: inline-flex; align-items: center; gap: 7px;
+}
+.ucard__chip:hover { background: var(--ucol); color: #fff; transform: translateY(-2px) scale(1.04); }
+.ucard__chip .ear { width: 15px; height: 15px; opacity: .7; }
+.ucard__cta { margin-top: 18px; align-self: flex-start; display: inline-flex; align-items: center; gap: 12px; }
+.ucard__play { width: 58px; height: 58px; border-radius: 50%; background: var(--ucol); display: grid; place-items: center; transition: transform .35s var(--bounce); }
+.ucard:hover .ucard__play { transform: scale(1.06); }
+.ucard__play svg { width: 22px; height: 22px; fill: #fff; }
+.ucard__cta span { font-weight: 700; font-size: 16px; color: var(--ucol); }
+
+/* ============================================================
+   AUJOURD'HUI
+   ============================================================ */
+.today { background: var(--k-cream); }
+.today-rail { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.tcard {
+  border-radius: 26px; padding: 26px; background: var(--k-card); cursor: pointer;
+  border: 2px solid color-mix(in oklab, var(--tcol) 24%, transparent);
+  display: flex; flex-direction: column; gap: 14px; min-height: 280px;
+  transition: transform .5s var(--bounce), box-shadow .5s var(--ease);
+}
+.tcard:hover { transform: translateY(-6px); box-shadow: 0 30px 54px -34px color-mix(in oklab, var(--tcol) 60%, transparent); }
+.tcard__badge { font-family: var(--k-hand); font-size: 22px; color: var(--tcol); }
+.tcard__illu { width: 100%; aspect-ratio: 4/3; border-radius: 18px; overflow: hidden; background: color-mix(in oklab, var(--tcol) 12%, var(--k-sand)); }
+.tcard__illu image-slot { width: 100%; height: 100%; display: block; }
+.tcard h3 { font-size: 26px; color: var(--k-ink); }
+.tcard__row { margin-top: auto; display: flex; align-items: center; gap: 14px; }
+.tcard__row .say { width: 56px; height: 56px; background: var(--tcol); }
+.tcard__row .lbl { font-weight: 700; font-size: 15.5px; color: var(--tcol); }
+
+/* ============================================================
+   MES PROGRÈS — Baobab
+   ============================================================ */
+.progres { text-align: center; }
+.progres .lead { max-width: 480px; margin: 0 auto; font-size: 18px; color: var(--k-soft); font-weight: 500; }
+.baobab-stage { position: relative; margin: 30px auto 0; width: min(640px, 100%); }
+.baobab-stage svg { width: 100%; height: auto; overflow: visible; }
+.leaf { transform-box: fill-box; transform-origin: center; opacity: 0; transform: scale(0); }
+.leaf.grown { animation: leafPop .6s var(--bounce) forwards; }
+@keyframes leafPop { 0% { opacity: 0; transform: scale(0) rotate(-20deg);} 70% { opacity: 1; transform: scale(1.15) rotate(6deg);} 100% { opacity: 1; transform: scale(1) rotate(0);} }
+.fruit { transform-box: fill-box; transform-origin: center; opacity: 0; transform: scale(0); }
+.fruit.grown { animation: leafPop .7s var(--bounce) forwards; }
+.progres__actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 30px; }
+.grow-btn {
+  font-size: 15px; font-weight: 700; color: var(--k-ink); background: var(--k-card);
+  border: 2px solid color-mix(in oklab, var(--terra) 24%, transparent); padding: 13px 22px; border-radius: 100px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 9px; transition: all .35s var(--bounce);
+}
+.grow-btn:hover { transform: translateY(-2px) scale(1.03); border-color: var(--terra); }
+.grow-btn:active { transform: scale(0.94); }
+.grow-btn .e { font-size: 18px; }
+.progres__reward { font-family: var(--k-hand); font-size: 26px; color: var(--k-green); margin-top: 22px; min-height: 1.4em; transition: opacity .4s; }
+
+/* ============================================================
+   PARENTS (discret) + footer
+   ============================================================ */
+.parents { padding: 40px 0 0; }
+.parents__inner {
+  max-width: 1180px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 14px;
+  padding: 22px clamp(20px,4vw,40px); border-top: 2px dashed color-mix(in oklab, var(--terra) 18%, transparent);
+}
+.parents__inner a { font-size: 15px; font-weight: 600; color: var(--k-soft); display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 100px; transition: all .3s var(--ease); }
+.parents__inner a:hover { background: var(--k-sand); color: var(--k-ink); }
+.kfoot { text-align: center; padding: 30px 0 46px; }
+.kfoot .flag { display: inline-flex; gap: 4px; margin-bottom: 14px; }
+.kfoot .flag i { width: 22px; height: 6px; border-radius: 3px; }
+.kfoot .flag i:nth-child(1){ background: var(--k-red); }
+.kfoot .flag i:nth-child(2){ background: var(--k-green); }
+.kfoot .flag i:nth-child(3){ background: var(--k-yellow); }
+.kfoot p { font-family: var(--k-hand); font-size: 22px; color: var(--terra); }
+
+/* ============================================================
+   FULL-SCREEN STORY/RHYME READER
+   ============================================================ */
+.reader { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity .5s var(--ease); }
+.reader.open { opacity: 1; pointer-events: auto; }
+.reader__bg { position: absolute; inset: 0; transition: background 1s var(--ease); }
+.reader__scene { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; }
+.reader__illu { width: min(60%, 620px); aspect-ratio: 4/3; border-radius: 28px; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(0,0,0,.5); background: rgba(255,255,255,.5); transition: transform .8s var(--bounce), opacity .6s; }
+.reader__illu image-slot { width: 100%; height: 100%; display: block; }
+.reader__top { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 22px clamp(18px,4vw,36px); }
+.reader__title { font-family: var(--k-title); font-size: clamp(24px, 3.4vw, 40px); color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.4); }
+.reader__close { width: 56px; height: 56px; border-radius: 50%; border: none; background: rgba(255,255,255,.92); cursor: pointer; display: grid; place-items: center; transition: transform .3s var(--bounce); }
+.reader__close:hover { transform: scale(1.08) rotate(90deg); }
+.reader__close svg { width: 24px; height: 24px; stroke: var(--k-ink); stroke-width: 2.4; fill: none; }
+.reader__bottom { position: relative; z-index: 3; margin-top: auto; padding: 0 clamp(18px,4vw,36px) clamp(24px,5vw,52px); display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.reader__subs { text-align: center; max-width: 760px; min-height: 2.6em; }
+.reader__moore { font-family: var(--k-title); font-size: clamp(26px, 4vw, 46px); font-weight: 500; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,.45); line-height: 1.12; }
+.reader__fr { font-family: var(--k-hand); font-size: clamp(20px, 2.6vw, 30px); color: rgba(255,255,255,.92); margin-top: 8px; text-shadow: 0 2px 10px rgba(0,0,0,.4); }
+.reader__subs.hide-fr .reader__fr { display: none; }
+.reader__wave { display: flex; align-items: center; gap: 4px; height: 46px; }
+.reader__wave i { width: 5px; height: 10px; background: #fff; border-radius: 3px; opacity: .55; }
+.reader__wave.on i { animation: rwave 1s var(--ease) infinite; opacity: 1; }
+@keyframes rwave { 0%,100% { height: 10px; } 50% { height: 40px; } }
+.reader__wave i:nth-child(even){ animation-delay: .12s; } .reader__wave i:nth-child(3n){ animation-delay: .26s; } .reader__wave i:nth-child(5n){ animation-delay: .4s; }
+.reader__ctrls { display: flex; align-items: center; gap: 22px; }
+.reader__pause { width: 96px; height: 96px; border-radius: 50%; border: none; background: #fff; cursor: pointer; display: grid; place-items: center; transition: transform .3s var(--bounce); box-shadow: 0 20px 44px -18px rgba(0,0,0,.5); }
+.reader__pause:hover { transform: scale(1.06); }
+.reader__pause svg { width: 38px; height: 38px; fill: var(--terra); }
+.reader__again, .reader__subtoggle { display: inline-flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 700; color: #fff; background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.4); padding: 13px 22px; border-radius: 100px; cursor: pointer; backdrop-filter: blur(6px); transition: all .35s var(--bounce); font-family: var(--k-sans); }
+.reader__again:hover, .reader__subtoggle:hover { background: rgba(255,255,255,.3); transform: scale(1.04); }
+.reader__again .e { font-size: 18px; }
+
+/* sticky bottom voice (mobile) */
+.kfab { display: none; }
+
+/* ============================================================
+   SCROLL REVEAL (bouncy)
+   ============================================================ */
+.kreveal { opacity: 0; transform: translateY(28px); transition: opacity .6s var(--ease), transform .6s var(--bounce); }
+.kreveal.in { opacity: 1; transform: none; }
+.kreveal.kd1 { transition-delay: .08s; } .kreveal.kd2 { transition-delay: .16s; } .kreveal.kd3 { transition-delay: .24s; } .kreveal.kd4 { transition-delay: .32s; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .khero__top { grid-template-columns: 1fr; text-align: center; gap: 8px; padding-top: 0; }
+  .mascot { max-width: 230px; order: -1; }
+  .mascot-bubble { font-size: 22px; right: 2%; }
+  .khero__say { display: flex; flex-direction: column; align-items: center; }
+  .khero__sub { margin-left: auto; margin-right: auto; }
+  .khero__cta { justify-content: center; }
+  .univers4 { grid-template-columns: 1fr; }
+  .today-rail { grid-template-columns: 1fr; }
+  .kfab {
+    display: grid; place-items: center; position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 90;
+    gap: 0; padding: 0;
+  }
+}
+@media (max-width: 540px) {
+  .khero h1 { font-size: clamp(48px, 14vw, 64px); }
+  .ksec__head h2 { font-size: clamp(30px, 8vw, 40px); }
+  .ucard { padding: 26px; min-height: 300px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-ear-l, .m-ear-r, .m-eye, .m-arm, .mascot-bubble, .say.speaking { animation: none !important; }
+}
