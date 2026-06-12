@@ -20,7 +20,6 @@ const TTS_VOICES = [
   { id: 'rama',  name: 'Ramata',   lang: 'Mooré · clair',   img: '',                           slot: 'tts-6', coming: true },
 ];
 
-const TTS_API  = 'https://hfdjobii-djobi-tts-demo.hf.space';
 const VOICE_MAP = { djobi: 'Djobi (Voix 1)', salim: 'Salimata (Voix 2)', aicha: 'Aicha (Voix 3)' };
 
 const TRANSCRIPT_SAMPLE =
@@ -238,42 +237,21 @@ function ReadAloud() {
     const voiceName = VOICE_MAP[voiceId] || 'Djobi (Voix 1)';
     setLoading(true);
     try {
-      const submitRes = await fetch(`${TTS_API}/gradio_api/call/synthesize`, {
+      const res = await fetch('/api/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: [textToPlay, voiceName] }),
+        body: JSON.stringify({ text: textToPlay, voice: voiceName }),
       });
-      if (!submitRes.ok) throw new Error(`Erreur serveur (${submitRes.status})`);
-      const { event_id } = await submitRes.json();
-
-      const streamRes = await fetch(`${TTS_API}/gradio_api/call/synthesize/${event_id}`);
-      const reader    = streamRes.body.getReader();
-      const decoder   = new TextDecoder();
-      let buf = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data:')) continue;
-          try {
-            const parsed = JSON.parse(line.slice(5));
-            if (Array.isArray(parsed) && parsed[0]?.url) {
-              const audio = new Audio(parsed[0].url);
-              audioRef.current  = audio;
-              audio.playbackRate = rate;
-              setLoading(false);
-              setPlaying(true);
-              audio.onended = () => { setPlaying(false); audioRef.current = null; };
-              audio.play();
-              return;
-            }
-          } catch (_) {}
-        }
-      }
+      if (!res.ok) throw new Error(`Erreur synthèse (${res.status})`);
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current  = audio;
+      audio.playbackRate = rate;
+      setLoading(false);
+      setPlaying(true);
+      audio.onended = () => { setPlaying(false); URL.revokeObjectURL(url); audioRef.current = null; };
+      audio.play();
     } catch (e) {
       setErrMsg('Synthèse échouée — réessaie dans quelques secondes.');
       console.error('[TTS]', e);
