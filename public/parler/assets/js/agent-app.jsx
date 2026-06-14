@@ -348,8 +348,20 @@ function AgentApp() {
         }),
       });
       const data = await res.json();
-      full = data.text || "Je n'ai pas pu répondre. Réessaie dans un instant.";
       respLang = data.lang || respLang;
+      if (data.event_id && data.space) {
+        // Mode premium : SSE lu directement depuis le Space (pas de timeout Vercel)
+        const sseRes = await fetch(`${data.space}/gradio_api/call/generate/${data.event_id}`);
+        const raw = await sseRes.text();
+        const match = raw.match(/^data:\s*(.+)$/m);
+        if (match) {
+          const parsed = JSON.parse(match[1]);
+          full = (Array.isArray(parsed) ? parsed[0] : parsed)?.toString().trim() || '';
+        }
+        if (!full) full = "Je n'ai pas pu répondre. Réessaie dans un instant.";
+      } else {
+        full = data.text || "Je n'ai pas pu répondre. Réessaie dans un instant.";
+      }
     } catch (e) {
       full = "Problème de connexion. Vérifie ta connexion internet et réessaie.";
     }

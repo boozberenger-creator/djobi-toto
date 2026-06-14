@@ -19,54 +19,25 @@ RÈGLES :
 
 const SPACE_URL = "https://hfdjobii-djobi-toto-llm.hf.space";
 
-// Notre Mistral mooré fine-tuné — avec retry sur cold start ZeroGPU
-async function chatPremium(message: string, context: string): Promise<string> {
+// Mode premium : Vercel soumet seulement le job (< 5s), le client lit le SSE directement
+// → contourne le timeout Vercel de 60s sur les longues générations LLM
+async function submitPremium(message: string, context: string): Promise<{ event_id: string; space: string }> {
   const HF_TOKEN = process.env.HF_TOKEN || "";
   const authHeaders = HF_TOKEN ? { Authorization: `Bearer ${HF_TOKEN}` } : {};
+  const messageWithContext = context ? `${context}\n\nQuestion : ${message}` : message;
 
-  const messageWithContext = context
-    ? `${context}\n\nQuestion : ${message}`
-    : message;
+  const res = await fetch(`${SPACE_URL}/gradio_api/call/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders },
+    body: JSON.stringify({ data: [messageWithContext] }),
+    signal: AbortSignal.timeout(15_000),
+  });
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const res = await fetch(`${SPACE_URL}/gradio_api/call/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ data: [messageWithContext] }),
-        signal: AbortSignal.timeout(20_000),
-      });
+  if (res.status === 503) throw new Error("loading");
+  if (!res.ok) throw new Error(`Space POST ${res.status}`);
 
-      // 503 = Space en cold start → on attend et on réessaie
-      if (res.status === 503) {
-        if (attempt < 3) await new Promise(r => setTimeout(r, 8_000 * attempt));
-        continue;
-      }
-      if (!res.ok) throw new Error(`Space POST ${res.status}`);
-
-      const { event_id } = await res.json();
-
-      const sse = await fetch(
-        `${SPACE_URL}/gradio_api/call/generate/${event_id}`,
-        {
-          headers: authHeaders,
-          signal: AbortSignal.timeout(90_000),
-        }
-      );
-      if (!sse.ok) throw new Error(`Space SSE ${sse.status}`);
-
-      const text = await sse.text();
-      const match = text.match(/^data:\s*(.+)$/m);
-      if (!match) throw new Error("SSE: pas de data");
-      const data = JSON.parse(match[1]);
-      return (Array.isArray(data) ? data[0] : data)?.toString().trim() ?? "";
-
-    } catch (e) {
-      if (attempt === 3) throw e;
-      await new Promise(r => setTimeout(r, 5_000 * attempt));
-    }
-  }
-  throw new Error("Space indisponible après 3 tentatives");
+  const { event_id } = await res.json();
+  return { event_id, space: SPACE_URL };
 }
 
 // Claude Haiku — mode gratuit — avec contexte RAG + web injecté
@@ -114,20 +85,27 @@ export async function POST(req: NextRequest) {
     // 3. Contexte final = RAG + web (au moins l'un des deux)
     const fullContext = ragContext + webContext;
 
-    // 4. Appel LLM avec contexte enrichi
-    let text = "";
+    // 4. Appel LLM
     const isPremium = mode === "premium";
 
     if (isPremium) {
-      text = await chatPremium(message, fullContext);
-    } else {
-      text = await chatGratuit(message, history ?? [], fullContext);
+      // Soumettre le job et retourner l'event_id au client — il lira le SSE directement
+      const { event_id, space } = await submitPremium(message, fullContext);
+      return NextResponse.json({
+        event_id,
+        space,
+        lang: lang ?? "Français",
+        model: "mistral-moore",
+        rag_used: ragResults.length,
+        web_used: webUsed,
+      });
     }
 
+    const text = await chatGratuit(message, history ?? [], fullContext);
     return NextResponse.json({
       text,
       lang: lang ?? "Français",
-      model: isPremium ? "mistral-moore" : "claude-haiku",
+      model: "claude-haiku",
       rag_used: ragResults.length,
       web_used: webUsed,
     });
