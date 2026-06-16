@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DJOBI TOTO — Ta voix. Ta langue. Ton intelligence.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<!-- ====================== MOTIFS FASO DAN FANI (sprite) ====================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Bande tissée authentique (strip-weave) — texture de fond -->
+    <pattern id="strip-terra" width="60" height="240" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#A0421C" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M30 5 L45 20 L30 35 L15 20 Z"></path>
+        <path d="M30 12 L38 20 L30 28 L22 20 Z"></path>
+        <path d="M9 70 L19.5 60 L30 70 L40.5 60 L51 70"></path>
+        <path d="M9 64 L19.5 54 L30 64 L40.5 54 L51 64"></path>
+        <path d="M11 133 L25 147 M25 133 L11 147"></path>
+        <path d="M35 133 L49 147 M49 133 L35 147"></path>
+        <path d="M10 214 V232 M18 214 V232 M26 214 V232 M34 214 V232 M42 214 V232 M50 214 V232"></path>
+      </g>
+      <g fill="#A0421C" stroke="none">
+        <circle cx="30" cy="20" r="1.5"></circle>
+        <circle cx="10" cy="100" r="1.4"></circle><circle cx="20" cy="100" r="1.4"></circle><circle cx="30" cy="100" r="1.4"></circle><circle cx="40" cy="100" r="1.4"></circle><circle cx="50" cy="100" r="1.4"></circle>
+        <path d="M6 192 L12 176 L18 192 Z M18 192 L24 176 L30 192 Z M30 192 L36 176 L42 192 Z M42 192 L48 176 L54 192 Z"></path>
+      </g>
+    </pattern>
+    <pattern id="strip-ivory" width="60" height="240" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#F5EDDC" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M30 5 L45 20 L30 35 L15 20 Z"></path>
+        <path d="M30 12 L38 20 L30 28 L22 20 Z"></path>
+        <path d="M9 70 L19.5 60 L30 70 L40.5 60 L51 70"></path>
+        <path d="M9 64 L19.5 54 L30 64 L40.5 54 L51 64"></path>
+        <path d="M11 133 L25 147 M25 133 L11 147"></path>
+        <path d="M35 133 L49 147 M49 133 L35 147"></path>
+        <path d="M10 214 V232 M18 214 V232 M26 214 V232 M34 214 V232 M42 214 V232 M50 214 V232"></path>
+      </g>
+      <g fill="#F5EDDC" stroke="none">
+        <circle cx="30" cy="20" r="1.5"></circle>
+        <circle cx="10" cy="100" r="1.4"></circle><circle cx="20" cy="100" r="1.4"></circle><circle cx="30" cy="100" r="1.4"></circle><circle cx="40" cy="100" r="1.4"></circle><circle cx="50" cy="100" r="1.4"></circle>
+        <path d="M6 192 L12 176 L18 192 Z M18 192 L24 176 L30 192 Z M30 192 L36 176 L42 192 Z M42 192 L48 176 L54 192 Z"></path>
+      </g>
+    </pattern>
+
+    <!-- Colonne de glyphes tissés (bord du hero) -->
+    <symbol id="wv-glyphs" viewBox="0 0 26 440">
+      <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 24 L13 32 L21 24"></path>
+        <path d="M13 80 L22 90 L13 100 L4 90 Z"></path>
+        <path d="M6 145 L20 159 M20 145 L6 159"></path>
+        <path d="M13 204 L22 214 L13 224 L4 214 Z"></path>
+        <path d="M5 280 L13 272 L21 280"></path>
+        <path d="M13 328 L22 338 L13 348 L4 338 Z"></path>
+        <path d="M6 393 L20 407 M20 393 L6 407"></path>
+      </g>
+      <circle cx="13" cy="214" r="1.6" fill="currentColor"></circle>
+    </symbol>
+
+    <!-- Diviseur tissé (sous les eyebrows) -->
+    <symbol id="wv-divider" viewBox="0 0 120 14">
+      <line x1="6" y1="7" x2="114" y2="7" stroke="currentColor" stroke-width="1" opacity="0.4"></line>
+      <g fill="none" stroke="currentColor" stroke-width="1.3">
+        <path d="M14 7 L20 1 L26 7 L20 13 Z"></path>
+        <path d="M34 7 L40 1 L46 7 L40 13 Z"></path>
+        <path d="M74 7 L80 1 L86 7 L80 13 Z"></path>
+        <path d="M94 7 L100 1 L106 7 L100 13 Z"></path>
+      </g>
+      <path d="M54 7 L60 1 L66 7 L60 13 Z" fill="currentColor"></path>
+    </symbol>
+
+    <!-- Médaillon-motif (bloc discret) -->
+    <symbol id="wv-motif" viewBox="0 0 120 120">
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+        <path d="M60 6 L114 60 L60 114 L6 60 Z"></path>
+        <path d="M60 26 L94 60 L60 94 L26 60 Z"></path>
+        <path d="M60 44 L76 60 L60 76 L44 60 Z"></path>
+        <path d="M60 13 V20 M56.5 16.5 H63.5"></path>
+        <path d="M60 100 V107 M56.5 103.5 H63.5"></path>
+        <path d="M13 60 H20 M16.5 56.5 V63.5"></path>
+        <path d="M100 60 H107 M103.5 56.5 V63.5"></path>
+      </g>
+      <g fill="currentColor" stroke="none">
+        <circle cx="60" cy="60" r="2.4"></circle>
+        <circle cx="30" cy="30" r="1.5"></circle><circle cx="90" cy="30" r="1.5"></circle>
+        <circle cx="30" cy="90" r="1.5"></circle><circle cx="90" cy="90" r="1.5"></circle>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ====================== NAVBAR ====================== -->
+<nav class="nav">
+  <div class="nav__brand" data-scroll="#top">
+    <svg class="logo-mark" viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="19" cy="18.5" rx="15" ry="12" fill="#A0421C"></ellipse>
+      <path d="M9 28 L7 35 L15 30 Z" fill="#A0421C"></path>
+      <ellipse cx="29" cy="30" rx="15" ry="12" fill="#009E49"></ellipse>
+      <path d="M39 40 L42 47 L34 41 Z" fill="#009E49"></path>
+      <circle cx="24" cy="24" r="3" fill="#FCD116"></circle>
+    </svg>
+    <span class="logo-word">DJOBI&nbsp;TOTO</span>
+  </div>
+  <div class="nav__links">
+    <a href="#" data-scroll=".map-sec">Régions</a>
+    <a href="#" data-scroll=".demo">Démonstration</a>
+    <a href="#" data-scroll=".univers">Univers</a>
+    <a href="#" data-scroll=".temoins">Témoignages</a>
+  </div>
+  <a href="#" class="nav__cta" data-scroll=".cta">Commencer</a>
+  <a href="#" class="nav__cta nav__burger" data-scroll=".cta" aria-label="Menu">☰</a>
+</nav>
+
+<!-- ====================== 1 · HERO ====================== -->
+<header class="hero" id="top">
+  <svg class="hero__pattern" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="100%" height="100%" fill="url(#strip-terra)"></rect>
+  </svg>
+  <div class="hero__glyphs left" aria-hidden="true"><svg viewBox="0 0 26 440" preserveAspectRatio="xMidYMid meet"><use href="#wv-glyphs"></use></svg></div>
+  <div class="hero__glyphs right" aria-hidden="true"><svg viewBox="0 0 26 440" preserveAspectRatio="xMidYMid meet"><use href="#wv-glyphs"></use></svg></div>
+
+  <div class="hero__inner">
+    <div class="beta-badge reveal">Version Bêta</div>
+    <h1 class="display reveal">Ta voix. Ta langue.<br /><em>Ton intelligence.</em></h1>
+    <p class="hero__sub reveal d1">DJOBI&nbsp;TOTO comprend et parle le <b>mooré</b>.<br />L'intelligence artificielle, dans la langue de chacun.</p>
+
+    <button class="mic reveal d2" onclick="window.location.href='/parler'" aria-label="Parler à DJOBI TOTO">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a4 4 0 0 0 4-4v-5a4 4 0 1 0-8 0v5a4 4 0 0 0 4 4Zm6.5-4a.9.9 0 0 1 1.8 0 8.3 8.3 0 0 1-7.4 8.25V23a.9.9 0 0 1-1.8 0v-3.05A8.3 8.3 0 0 1 3.7 11.5a.9.9 0 0 1 1.8 0 6.5 6.5 0 0 0 13 0Z"></path></svg>
+    </button>
+    <p class="hero__hint reveal d3">Appuie et parle — en mooré ou en français</p>
+  </div>
+
+  <div class="hero__scroll">
+    <span>Découvrir</span>
+    <span class="dot"></span>
+  </div>
+</header>
+
+<!-- ====================== 2 · CARTE DU BURKINA ====================== -->
+<section class="map-sec wrap">
+  <p class="eyebrow reveal">Treize régions · une seule voix</p>
+  <div class="weave-divider reveal d1" aria-hidden="true"><svg viewBox="0 0 120 14"><use href="#wv-divider"></use></svg></div>
+  <h2 class="h-section reveal d1">Le Burkina te parle.</h2>
+  <p class="lead reveal d2">Survole une région pour entendre sa salutation. Du Sahel aux Cascades, chaque terre a sa langue — DJOBI&nbsp;TOTO les comprend toutes.</p>
+
+  <div class="map-wrapper reveal d2">
+
+    <div class="scene">
+      <div class="map-3d" id="map3d">
+
+        <svg class="map-svg" viewBox="0 0 900 660" xmlns="http://www.w3.org/2000/svg" aria-label="Carte du Burkina Faso">
+          <title>Carte interactive du Burkina Faso · 13 régions</title>
+
+          <path class="country-base" d="
+            M 90,285 C 95,255 105,225 130,210 C 165,195 200,190 235,185
+            C 270,175 305,160 345,140 C 385,118 425,100 470,95
+            C 510,93 545,105 580,120 C 615,128 650,130 680,125
+            C 705,125 725,135 740,155 C 760,180 775,215 785,250
+            C 795,290 798,330 795,370 C 793,410 785,445 770,475
+            C 752,500 725,512 695,517 C 660,520 620,520 580,520
+            C 555,518 530,525 505,530 C 475,535 445,532 415,530
+            C 380,528 345,532 310,540 C 275,548 240,560 210,580
+            C 188,602 168,618 148,622 C 130,618 115,605 100,585
+            C 82,560 68,530 58,495 C 50,460 50,425 53,390
+            C 56,355 62,325 72,300 C 78,290 84,285 90,285 Z
+          "></path>
+
+          <g id="regions">
+            <path class="region" data-region="sahel" d="M 440,100 L 470,95 L 510,93 L 545,105 L 580,120 L 615,128 L 650,130 L 680,125 L 705,125 L 725,135 L 740,155 L 760,180 L 775,215 L 785,250 L 795,290 L 798,330 L 795,355 L 720,340 L 640,320 L 570,290 L 510,260 L 470,225 L 450,180 L 440,140 Z"></path>
+            <text class="region-label" x="615" y="225">SAHEL</text>
+            <path class="region" data-region="nord" d="M 305,165 L 345,140 L 385,125 L 425,115 L 440,100 L 440,140 L 450,180 L 420,200 L 380,210 L 335,205 L 305,180 Z"></path>
+            <text class="region-label" x="375" y="170">NORD</text>
+            <path class="region" data-region="centre-nord" d="M 380,210 L 420,200 L 450,180 L 470,225 L 510,260 L 540,295 L 510,320 L 460,325 L 415,310 L 395,275 L 380,240 Z"></path>
+            <text class="region-label" x="455" y="265">CENTRE-NORD</text>
+            <path class="region" data-region="boucle-du-mouhoun" d="M 90,285 C 95,255 105,225 130,210 C 165,195 200,190 235,185 C 270,175 305,165 305,180 L 305,250 L 290,295 L 250,330 L 190,340 L 130,330 L 90,310 Z"></path>
+            <text class="region-label" x="200" y="265">BOUCLE DU MOUHOUN</text>
+            <path class="region" data-region="est" d="M 540,295 L 570,290 L 640,320 L 720,340 L 795,355 L 793,410 L 785,445 L 770,475 L 720,475 L 660,460 L 600,430 L 565,395 L 545,355 Z"></path>
+            <text class="region-label" x="685" y="385">EST</text>
+            <path class="region" data-region="centre-ouest" d="M 250,330 L 290,295 L 380,240 L 395,275 L 415,310 L 460,325 L 445,375 L 400,395 L 320,395 L 275,375 Z"></path>
+            <text class="region-label" x="355" y="350">CENTRE-OUEST</text>
+            <path class="region" data-region="plateau-central" d="M 460,325 L 510,320 L 540,295 L 545,355 L 565,395 L 530,400 L 490,395 L 445,375 Z"></path>
+            <text class="region-label" x="510" y="355" style="font-size:7.5px;">PLATEAU-CENTRAL</text>
+            <path class="region" data-region="centre" d="M 470,370 L 495,365 L 515,380 L 510,400 L 485,408 L 465,395 Z"></path>
+            <path class="region" data-region="centre-est" d="M 565,395 L 600,430 L 660,460 L 720,475 L 700,510 L 635,520 L 580,518 L 555,495 L 530,460 L 530,425 Z"></path>
+            <text class="region-label" x="615" y="465">CENTRE-EST</text>
+            <path class="region" data-region="centre-sud" d="M 445,375 L 490,395 L 510,400 L 530,425 L 530,460 L 555,495 L 510,510 L 460,512 L 415,505 L 395,475 L 410,440 Z"></path>
+            <text class="region-label" x="465" y="465">CENTRE-SUD</text>
+            <path class="region" data-region="hauts-bassins" d="M 90,310 L 130,330 L 190,340 L 250,330 L 275,375 L 270,425 L 235,460 L 180,470 L 130,460 L 80,430 L 58,395 L 53,355 L 56,325 L 72,300 L 84,290 L 90,310 Z"></path>
+            <text class="region-label" x="175" y="395">HAUTS-BASSINS</text>
+            <path class="region" data-region="sud-ouest" d="M 235,460 L 270,425 L 320,395 L 400,395 L 410,440 L 395,475 L 380,510 L 340,535 L 280,540 L 240,515 Z"></path>
+            <text class="region-label" x="320" y="475">SUD-OUEST</text>
+            <path class="region" data-region="cascades" d="M 80,430 L 130,460 L 180,470 L 235,460 L 240,515 L 220,545 L 210,580 L 188,602 L 168,618 L 148,622 L 130,618 L 115,605 L 100,585 L 82,560 L 68,530 L 58,495 L 50,460 Z"></path>
+            <text class="region-label" x="155" y="525">CASCADES</text>
+          </g>
+
+          <g pointer-events="none">
+            <circle class="capital-ring" cx="490" cy="385" r="4"></circle>
+            <circle class="capital-dot" cx="490" cy="385" r="3.2"></circle>
+            <text class="capital-label" x="502" y="389">OUAGADOUGOU</text>
+          </g>
+
+          <g transform="translate(840,75)" pointer-events="none">
+            <circle class="compass-circle" cx="0" cy="0" r="22"></circle>
+            <line x1="0" y1="-16" x2="0" y2="16" stroke="var(--ink-mute)" stroke-width="0.5"></line>
+            <line x1="-12" y1="0" x2="12" y2="0" stroke="var(--ink-mute)" stroke-width="0.5"></line>
+            <polygon points="0,-18 -4,-8 4,-8" fill="var(--terre)"></polygon>
+            <text class="compass" x="0" y="-26" text-anchor="middle">N</text>
+          </g>
+
+          <g transform="translate(60,635)" pointer-events="none">
+            <line x1="0" y1="0" x2="100" y2="0" stroke="var(--ink-mute)" stroke-width="0.8"></line>
+            <line x1="0" y1="-3" x2="0" y2="3" stroke="var(--ink-mute)" stroke-width="0.8"></line>
+            <line x1="50" y1="-3" x2="50" y2="3" stroke="var(--ink-mute)" stroke-width="0.8"></line>
+            <line x1="100" y1="-3" x2="100" y2="3" stroke="var(--ink-mute)" stroke-width="0.8"></line>
+            <text x="50" y="16" text-anchor="middle" font-size="9" fill="var(--ink-mute)" font-family="var(--sans)" letter-spacing="1" font-weight="500">200 KM</text>
+          </g>
+        </svg>
+
+        <div class="cloud cloud-1"><svg viewBox="0 0 220 70"><g fill="rgba(255,255,255,0.92)"><ellipse cx="60" cy="40" rx="42" ry="22"></ellipse><ellipse cx="105" cy="32" rx="38" ry="26"></ellipse><ellipse cx="150" cy="42" rx="34" ry="20"></ellipse><ellipse cx="180" cy="48" rx="22" ry="14"></ellipse><ellipse cx="35" cy="48" rx="18" ry="12"></ellipse></g></svg></div>
+        <div class="cloud cloud-2"><svg viewBox="0 0 180 60"><g fill="rgba(255,255,255,0.85)"><ellipse cx="50" cy="35" rx="34" ry="18"></ellipse><ellipse cx="90" cy="28" rx="32" ry="22"></ellipse><ellipse cx="130" cy="38" rx="28" ry="16"></ellipse><ellipse cx="25" cy="42" rx="14" ry="10"></ellipse></g></svg></div>
+        <div class="cloud cloud-3"><svg viewBox="0 0 280 80"><g fill="rgba(255,255,255,0.95)"><ellipse cx="80" cy="45" rx="52" ry="26"></ellipse><ellipse cx="140" cy="36" rx="48" ry="30"></ellipse><ellipse cx="200" cy="48" rx="42" ry="24"></ellipse><ellipse cx="240" cy="54" rx="28" ry="16"></ellipse><ellipse cx="40" cy="54" rx="22" ry="14"></ellipse></g></svg></div>
+        <div class="cloud cloud-4"><svg viewBox="0 0 160 55"><g fill="rgba(255,255,255,0.82)"><ellipse cx="50" cy="32" rx="32" ry="18"></ellipse><ellipse cx="85" cy="26" rx="28" ry="20"></ellipse><ellipse cx="115" cy="34" rx="24" ry="14"></ellipse><ellipse cx="25" cy="38" rx="14" ry="9"></ellipse></g></svg></div>
+
+        <div class="hologram" id="hologram">
+          <div class="holo-card">
+            <div class="holo-region" id="holoRegion">—</div>
+            <div class="holo-greeting" id="holoGreeting">—</div>
+            <div class="holo-lang" id="holoLang">—</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <aside class="info-panel" id="infoPanel">
+      <div class="placeholder">
+        Passe la souris sur une région pour découvrir sa langue. Clique pour faire apparaître l'hologramme.
+        <small>13 RÉGIONS · 7+ LANGUES NATIONALES</small>
+      </div>
+      <div class="info-stack">
+        <div class="info-region-name" id="rName">—</div>
+        <div class="info-greeting" id="rGreeting">—</div>
+        <div class="info-translation" id="rTranslation">—</div>
+        <div class="info-language">En <strong id="rLanguage">—</strong></div>
+        <div class="info-audio">
+          <button class="play-btn" id="playBtn" aria-label="Écouter">
+            <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+            <svg class="pause-icon" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"></path></svg>
+          </button>
+          <div class="waveform" id="waveform">
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+          </div>
+        </div>
+        <button class="reset-btn" id="resetBtn">↺ Vue d'ensemble</button>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<!-- ====================== 3 · DÉMO VIVANTE ====================== -->
+<section class="demo wrap">
+  <div class="demo-grid reveal">
+    <div class="demo-photo">
+      <image-slot id="portrait-principal" shape="rect" fit="cover"
+        src="assets/img/duo-burkinabe.png"
+        placeholder="[ IMAGE_PORTRAIT_PRINCIPAL ] — portrait vertical, cadrage poitrine"></image-slot>
+      <span class="photo-tag">Ouagadougou · en direct</span>
+    </div>
+
+    <div class="demo-chat">
+      <div class="motif-block" style="top:-40px; right:-54px; width:300px; height:300px;" aria-hidden="true"><svg viewBox="0 0 120 120"><use href="#wv-motif"></use></svg></div>
+      <p class="eyebrow">Démonstration vivante</p>
+      <div class="weave-divider on-dark" aria-hidden="true"><svg viewBox="0 0 120 14"><use href="#wv-divider"></use></svg></div>
+      <h3>Une conversation, deux langues.</h3>
+      <div class="bubbles" id="bubbles"></div>
+      <div class="demo-actions">
+        <button class="btn-ghost-light" data-scroll=".cta">
+          Essayer maintenant
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 4 · SIX UNIVERS ====================== -->
+<section class="univers wrap">
+  <p class="eyebrow reveal">Un assistant, six mondes</p>
+  <div class="weave-divider reveal d1" aria-hidden="true"><svg viewBox="0 0 120 14"><use href="#wv-divider"></use></svg></div>
+  <h2 class="h-section reveal d1">Pensé pour chacun.</h2>
+  <p class="lead reveal d2">De l'enfant qui apprend à l'entreprise qui bâtit, DJOBI&nbsp;TOTO s'adapte à la vie de tous.</p>
+
+  <div class="univers-grid">
+    <article class="uni-card reveal" onclick="window.location.href='/enfants'" style="cursor:pointer">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3 19 10 12 17 5 10Z"></path><path d="M12 17 10 22"></path></svg></span>
+      <h3>Enfants</h3>
+      <p>Histoires, comptines et leçons interactives en mooré, pour grandir dans sa langue maternelle.</p>
+      <span class="arrow">Découvrir&nbsp;→</span>
+    </article>
+
+    <article class="uni-card reveal d1" onclick="window.location.href='/adultes'" style="cursor:pointer">
+      <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"></circle><path d="M5.5 20a6.5 6.5 0 0 1 13 0"></path></svg></span>
+      <h3>Adultes</h3>
+      <p>Démarches, santé, agriculture, marché : des réponses utiles au quotidien, à la voix.</p>
+      <span class="arrow">Découvrir&nbsp;→</span>
+    </article>
+
+    <article class="uni-card reveal d2" onclick="window.location.href='/outils'" style="cursor:pointer">
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"></rect><rect x="14" y="4" width="6" height="6" rx="1.5"></rect><rect x="4" y="14" width="6" height="6" rx="1.5"></rect><rect x="14" y="14" width="6" height="6" rx="1.5"></rect></svg></span>
+      <h3>Outils</h3>
+      <p>Traduction, résumé, rédaction, calcul : une boîte à outils qui parle ta langue.</p>
+      <span class="arrow">Découvrir&nbsp;→</span>
+    </article>
+
+    <article class="uni-card reveal d1" onclick="window.location.href='/contribuer'" style="cursor:pointer">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.33-8.05C.9 10.1 2.2 6 6 6c2 0 3.2 1.4 4 2.6C10.8 7.4 12 6 14 6c3.8 0 5.1 4.1 3.33 6.95C18.7 16.65 12 21 12 21Z" stroke-linejoin="round"></path></svg></span>
+      <h3>Contribuer</h3>
+      <p>Corrige des transcriptions et des traductions en mooré : aide l'IA à mieux parler ta langue.</p>
+      <span class="arrow">Participer&nbsp;→</span>
+    </article>
+
+    <article class="uni-card reveal" onclick="window.location.href='/parler'" style="cursor:pointer">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12h1.5M9 7.5v9M13 4.5v15M17 9v6M20.5 11h0.5" stroke-linecap="round"></path></svg></span>
+      <h3>Agent vocal</h3>
+      <p>Parle, écoute, réponds — sans clavier, sans lecture. L'IA pour les non-alphabétisés.</p>
+      <span class="arrow">Découvrir&nbsp;→</span>
+    </article>
+
+    <article class="uni-card reveal d1" onclick="window.location.href='/apprentissage'" style="cursor:pointer">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z"></path><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"></path></svg></span>
+      <h3>Apprentissage autonome</h3>
+      <p>Lire, écrire, compter : un parcours patient qui s'adapte à ton rythme et à ta langue.</p>
+      <span class="arrow">Découvrir&nbsp;→</span>
+    </article>
+
+    <article class="uni-card reveal d2" onclick="window.location.href='/voix-api'" style="cursor:pointer">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M9 8 5 12l4 4M15 8l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      <h3>Voix &amp; API</h3>
+      <p>Intègre la voix mooré dans tes produits. Une API claire pour bâtisseurs et développeurs.</p>
+      <span class="arrow">Découvrir&nbsp;→</span>
+    </article>
+  </div>
+</section>
+
+<!-- ====================== 5 · CULTURE ====================== -->
+<section class="culture">
+  <image-slot id="image-culture" shape="rect" fit="cover" src="assets/img/culture.png"
+    placeholder="[ IMAGE_CULTURE ] — tissage Faso Dan Fani / architecture peinte de Tiébélé / paysage du Sahel"></image-slot>
+  <div class="culture__veil"></div>
+  <svg class="culture__tiebele" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="100%" height="100%" fill="url(#strip-ivory)"></rect>
+  </svg>
+  <div class="culture__inner reveal">
+    <p class="culture__quote">Notre savoir parle nos langues.</p>
+    <p class="culture__moore">« Tõnd bãngr gomda tõnd buud-goamã. »</p>
+  </div>
+</section>
+
+<!-- ====================== 6 · TÉMOIGNAGES ====================== -->
+<section class="temoins wrap">
+  <p class="eyebrow reveal">Celles et ceux qui parlent déjà</p>
+  <div class="weave-divider reveal d1" aria-hidden="true"><svg viewBox="0 0 120 14"><use href="#wv-divider"></use></svg></div>
+  <h2 class="h-section reveal d1">Des voix du Faso.</h2>
+  <p class="lead reveal d2">Trois personnes, trois parcours, une même langue retrouvée dans la technologie.</p>
+
+  <div class="temoins-grid">
+    <article class="temoin reveal">
+      <image-slot id="temoin-1" shape="rounded" radius="18" fit="cover"
+        placeholder="[ IMAGE_TEMOIN_1 ] — 4:5"></image-slot>
+      <div class="temoin__body">
+        <div class="temoin__id">Aminata</div>
+        <div class="temoin__meta">24 ans · Ouagadougou</div>
+        <p class="temoin__moore">« Rũndã, mam tõe n sõs ne tʋʋlg n maan m tʋʋmde. »</p>
+        <p class="temoin__fr">« Aujourd'hui, je travaille en parlant simplement à mon téléphone. »</p>
+      </div>
+    </article>
+
+    <article class="temoin reveal d1">
+      <image-slot id="temoin-2" shape="rounded" radius="18" fit="cover"
+        placeholder="[ IMAGE_TEMOIN_2 ] — 4:5"></image-slot>
+      <div class="temoin__body">
+        <div class="temoin__id">Salif</div>
+        <div class="temoin__meta">41 ans · Koudougou</div>
+        <p class="temoin__moore">« M sõsda ne-a wakat fãa pʋg koodo yelle. »</p>
+        <p class="temoin__fr">« Je lui demande chaque jour des conseils pour mes cultures. »</p>
+      </div>
+    </article>
+
+    <article class="temoin reveal d2">
+      <image-slot id="temoin-3" shape="rounded" radius="18" fit="cover"
+        placeholder="[ IMAGE_TEMOIN_3 ] — 4:5"></image-slot>
+      <div class="temoin__body">
+        <div class="temoin__id">Mariam</div>
+        <div class="temoin__meta">67 ans · Kaya</div>
+        <p class="temoin__moore">« Baa m sẽn pa mi gʋlsg ye, m tõe n sõsame. »</p>
+        <p class="temoin__fr">« Même sans savoir lire, je peux enfin dialoguer. »</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ====================== 7 · CTA FINAL ====================== -->
+<section class="cta">
+  <svg class="cta__pattern" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="100%" height="100%" fill="url(#strip-ivory)"></rect>
+  </svg>
+  <div class="cta__inner wrap reveal">
+    <h2>Commence à parler.</h2>
+    <p class="cta__sub">L'intelligence artificielle n'attend plus que ta voix. En mooré, dès maintenant.</p>
+    <button class="btn-terra" onclick="window.location.href='/parler'">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a4 4 0 0 0 4-4v-5a4 4 0 1 0-8 0v5a4 4 0 0 0 4 4Zm6.5-4a.9.9 0 0 1 1.8 0 8.3 8.3 0 0 1-7.4 8.25V23a.9.9 0 0 1-1.8 0v-3.05A8.3 8.3 0 0 1 3.7 11.5a.9.9 0 0 1 1.8 0 6.5 6.5 0 0 0 13 0Z"></path></svg>
+      Parler à DJOBI TOTO
+    </button>
+  </div>
+</section>
+
+<!-- ====================== FOOTER ====================== -->
+<footer class="footer">
+  <div class="footer__flag"><i></i><i></i><i></i></div>
+  <div class="wrap">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <span class="logo-word">DJOBI&nbsp;TOTO</span>
+        <p>L'intelligence artificielle conversationnelle, bilingue mooré&nbsp;/&nbsp;français. Accessible à toutes et à tous.</p>
+      </div>
+      <div class="footer__col">
+        <h4>Produit</h4>
+        <a href="#" data-scroll=".univers">Univers</a>
+        <a href="#" data-scroll=".demo">Démonstration</a>
+        <a href="#" data-scroll=".map-sec">Régions</a>
+        <a href="/parler">Agent vocal</a>
+      </div>
+      <div class="footer__col">
+        <h4>Bâtisseurs</h4>
+        <a href="#">API voix</a>
+        <a href="#">Documentation</a>
+        <a href="#">Tarifs</a>
+        <a href="#">Statut</a>
+      </div>
+      <div class="footer__col">
+        <h4>Faso</h4>
+        <a href="#" data-scroll=".temoins">Témoignages</a>
+        <a href="#">Mission</a>
+        <a href="#">Partenaires</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span class="made">Fait au Burkina Faso, pour le Burkina Faso.</span>
+      <span>© 2026 DJOBI TOTO</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Sticky mobile mic -->
+<button class="sticky-mic" onclick="window.location.href='/parler'" aria-label="Parler">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a4 4 0 0 0 4-4v-5a4 4 0 1 0-8 0v5a4 4 0 0 0 4 4Zm6.5-4a.9.9 0 0 1 1.8 0 8.3 8.3 0 0 1-7.4 8.25V23a.9.9 0 0 1-1.8 0v-3.05A8.3 8.3 0 0 1 3.7 11.5a.9.9 0 0 1 1.8 0 6.5 6.5 0 0 0 13 0Z"></path></svg>
+</button>
+
+<script src="assets/js/image-slot.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
