@@ -19,7 +19,7 @@ RÈGLES :
 
 const SPACE_URL = "https://hfdjobii-djobi-toto-llm.hf.space";
 
-// Mode premium : Vercel soumet seulement le job (< 5s), le client lit le SSE directement
+// Mode premium : Vercel soumet le job (< 15s), le client lit le SSE directement
 // → contourne le timeout Vercel de 60s sur les longues générations LLM
 async function submitPremium(message: string, context: string): Promise<{ event_id: string; space: string }> {
   const HF_TOKEN = process.env.HF_TOKEN || "";
@@ -33,14 +33,17 @@ async function submitPremium(message: string, context: string): Promise<{ event_
     signal: AbortSignal.timeout(15_000),
   });
 
-  if (res.status === 503) throw new Error("loading");
-  if (!res.ok) throw new Error(`Space POST ${res.status}`);
+  if (res.status === 503) throw new Error("space_loading");
+  if (!res.ok) throw new Error(`space_error_${res.status}`);
 
-  const { event_id } = await res.json();
+  const body = await res.json();
+  const event_id: string = body.event_id ?? "";
+  if (!event_id) throw new Error("no_event_id");
+
   return { event_id, space: SPACE_URL };
 }
 
-// Claude Haiku — mode gratuit — avec contexte RAG + web injecté
+// Claude Haiku — mode gratuit / fallback — avec contexte RAG + web injecté
 async function chatGratuit(
   message: string,
   history: { role: string; text: string }[],
@@ -69,11 +72,11 @@ export async function POST(req: NextRequest) {
     const { message, lang, history, mode } = await req.json();
     if (!message?.trim()) return NextResponse.json({ text: "" });
 
-    // 1. Recherche RAG dans notre base locale (instantané)
+    // 1. Recherche RAG (instantané)
     const ragResults = searchRAG(message, 3);
     const ragContext = buildRAGContext(ragResults);
 
-    // 2. Si RAG ne trouve rien → recherche web (Brave Search)
+    // 2. Fallback web si RAG vide
     let webContext = "";
     let webUsed = false;
     if (ragResults.length === 0) {
@@ -82,33 +85,39 @@ export async function POST(req: NextRequest) {
       webUsed = webContext.length > 0;
     }
 
-    // 3. Contexte final = RAG + web (au moins l'un des deux)
     const fullContext = ragContext + webContext;
-
-    // 4. Appel LLM
     const isPremium = mode === "premium";
 
+    // 3. Mode premium : tenter le Space HF, fallback Haiku si indisponible
     if (isPremium) {
-      // Soumettre le job et retourner l'event_id au client — il lira le SSE directement
-      const { event_id, space } = await submitPremium(message, fullContext);
-      return NextResponse.json({
-        event_id,
-        space,
-        lang: lang ?? "Français",
-        model: "mistral-moore",
-        rag_used: ragResults.length,
-        web_used: webUsed,
-      });
+      try {
+        const { event_id, space } = await submitPremium(message, fullContext);
+        // Succès : retourner l'event_id — le client lira le SSE directement
+        return NextResponse.json({
+          event_id,
+          space,
+          lang: lang ?? "Français",
+          model: "mistral-moore",
+          rag_used: ragResults.length,
+          web_used: webUsed,
+        });
+      } catch (premiumErr) {
+        // Space indisponible (quota ZeroGPU, cold start, erreur réseau...)
+        // → fallback silencieux vers Claude Haiku
+        console.warn("Premium Space unavailable, falling back to Haiku:", String(premiumErr));
+      }
     }
 
+    // 4. Claude Haiku (mode gratuit OU fallback premium)
     const text = await chatGratuit(message, history ?? [], fullContext);
     return NextResponse.json({
       text,
       lang: lang ?? "Français",
-      model: "claude-haiku",
+      model: isPremium ? "mistral-moore-fallback" : "claude-haiku",
       rag_used: ragResults.length,
       web_used: webUsed,
     });
+
   } catch (e) {
     console.error("chat error", e);
     return NextResponse.json(

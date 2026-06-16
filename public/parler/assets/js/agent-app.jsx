@@ -336,35 +336,73 @@ function AgentApp() {
     let full = '';
     let respLang = userLang || 'Français';
 
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userText,
-          lang: userLang,
-          history: historyRef.current.slice(-8),
-          mode: modeRef.current,
-        }),
-      });
-      const data = await res.json();
-      respLang = data.lang || respLang;
-      if (data.event_id && data.space) {
-        // Mode premium : SSE lu directement depuis le Space (pas de timeout Vercel)
-        const sseRes = await fetch(`${data.space}/gradio_api/call/generate/${data.event_id}`);
-        const raw = await sseRes.text();
-        const match = raw.match(/^data:\s*(.+)$/m);
-        if (match) {
-          const parsed = JSON.parse(match[1]);
-          full = (Array.isArray(parsed) ? parsed[0] : parsed)?.toString().trim() || '';
-        }
-        if (!full) full = "Je n'ai pas pu répondre. Réessaie dans un instant.";
-      } else {
-        full = data.text || "Je n'ai pas pu répondre. Réessaie dans un instant.";
+    // Appel API principal
+    const callAPI = (overrideMode) => fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: userText,
+        lang: userLang,
+        history: historyRef.current.slice(-8),
+        mode: overrideMode || modeRef.current,
+      }),
+    }).then(r => r.json());
+
+    // Fallback vers Claude Haiku si le Space premium est indisponible
+    const fallbackToGratuit = async () => {
+      try {
+        const fb = await callAPI('gratuit');
+        full = fb.text || '';
+        if (fb.lang) respLang = fb.lang;
+      } catch (fbErr) {
+        full = '';
       }
+    };
+
+    try {
+      const data = await callAPI();
+      if (data.lang) respLang = data.lang;
+
+      if (data.event_id && data.space) {
+        // Mode premium 2-step : lire le SSE directement depuis le Space
+        try {
+          const sseRes = await fetch(`${data.space}/gradio_api/call/generate/${data.event_id}`);
+          const raw = await sseRes.text();
+
+          if (raw.includes('event: error')) {
+            // Space en erreur (quota ZeroGPU épuisé, crash modèle...) → fallback
+            await fallbackToGratuit();
+          } else {
+            // Prendre le DERNIER data: (résultat final, pas token intermédiaire)
+            const allMatches = [...raw.matchAll(/^data:\s*(.+)$/gm)];
+            const lastMatch = allMatches[allMatches.length - 1];
+            if (lastMatch) {
+              try {
+                const parsed = JSON.parse(lastMatch[1]);
+                full = (Array.isArray(parsed) ? parsed[0] : parsed)?.toString().trim() || '';
+              } catch (_) { full = ''; }
+            }
+            if (!full) await fallbackToGratuit();
+          }
+        } catch (sseErr) {
+          // Erreur réseau SSE → fallback
+          await fallbackToGratuit();
+        }
+
+      } else if (data.text) {
+        // Mode gratuit ou fallback serveur : texte direct
+        full = data.text;
+
+      } else {
+        // Réponse vide (Space premium a échoué côté serveur) → fallback client
+        await fallbackToGratuit();
+      }
+
     } catch (e) {
       full = "Problème de connexion. Vérifie ta connexion internet et réessaie.";
     }
+
+    if (!full) full = "Je n'ai pas pu répondre. Réessaie dans un instant.";
 
     // Ajouter la réponse à l'historique
     historyRef.current.push({ role: 'bot', text: full });
