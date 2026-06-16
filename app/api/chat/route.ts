@@ -23,12 +23,13 @@ const SPACE_URL = "https://hfdjobii-djobi-toto-llm.hf.space";
 // → contourne le timeout Vercel de 60s sur les longues générations LLM
 async function submitPremium(message: string, context: string): Promise<{ event_id: string; space: string }> {
   const HF_TOKEN = process.env.HF_TOKEN || "";
-  const authHeaders = HF_TOKEN ? { Authorization: `Bearer ${HF_TOKEN}` } : {};
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (HF_TOKEN) headers["Authorization"] = `Bearer ${HF_TOKEN}`;
   const messageWithContext = context ? `${context}\n\nQuestion : ${message}` : message;
 
   const res = await fetch(`${SPACE_URL}/gradio_api/call/generate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders },
+    headers,
     body: JSON.stringify({ data: [messageWithContext] }),
     signal: AbortSignal.timeout(15_000),
   });
