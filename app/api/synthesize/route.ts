@@ -2,11 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 
 const TTS_SPACE = "https://hfdjobii-djobi-tts-demo.hf.space";
 
+// Mapping ID frontend → nom attendu par le Space TTS
+const VOICE_NAMES: Record<string, string> = {
+  // IDs nouvelle page /parler (Next.js)
+  voix1: "Voix 1",
+  voix2: "Djobi (Voix 2)",
+  voix3: "Salimata (Voix 3)",
+  aicha: "Aïcha",
+  noaga: "Noaga",
+  // IDs legacy (agent-app.jsx static)
+  aine:  "Voix 1",
+  djobi: "Djobi (Voix 2)",
+  salim: "Salimata (Voix 3)",
+};
+
 export async function POST(req: NextRequest) {
   const HF_TOKEN = process.env.HF_TOKEN || "";
 
   try {
     const { text, voice } = await req.json();
+    // Résolution du nom de voix
+    const voiceName = VOICE_NAMES[voice] ?? voice ?? "Voix 1";
 
     if (!text?.trim()) {
       return NextResponse.json({ error: "Texte vide" }, { status: 400 });
@@ -19,7 +35,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
         ...(HF_TOKEN && { Authorization: `Bearer ${HF_TOKEN}` }),
       },
-      body: JSON.stringify({ data: [text, voice || "Djobi (Voix 1)"] }),
+      body: JSON.stringify({ data: [text, voiceName] }),
       signal: AbortSignal.timeout(10_000),
     });
 

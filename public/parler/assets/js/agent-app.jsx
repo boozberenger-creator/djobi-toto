@@ -32,39 +32,24 @@ async function convertToWav16k(blob) {
 }
 
 /* ----------------------------------------------------------------
-   TTS MOORÉ : appel direct au Space HuggingFace (évite timeout Vercel)
+   TTS MOORÉ : 5 voix via /api/synthesize (XTTS fine-tuné)
 ---------------------------------------------------------------- */
-const TTS_SPACE = 'https://hfdjobii-djobi-toto-tts.hf.space';
-
-async function speakMoore(text, onend) {
+async function speakVoice(text, voiceId, onend) {
   try {
-    // Étape 1 : lancer la synthèse
-    const postRes = await fetch(`${TTS_SPACE}/gradio_api/call/synthesize`, {
+    const res = await fetch('/api/synthesize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: [text] }),
+      body: JSON.stringify({ text, voice: voiceId || 'aine' }),
     });
-    const { event_id } = await postRes.json();
-
-    // Étape 2 : récupérer l'audio (SSE)
-    const getRes = await fetch(`${TTS_SPACE}/gradio_api/call/synthesize/${event_id}`);
-    const raw = await getRes.text();
-    const match = raw.match(/^data:\s*(\[.*\])/m);
-    if (!match) { if (onend) onend(); return; }
-
-    const b64 = JSON.parse(match[1])[0];
-    if (!b64) { if (onend) onend(); return; }
-
-    // Étape 3 : jouer l'audio WAV
-    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const blob  = new Blob([bytes], { type: 'audio/wav' });
-    const url   = URL.createObjectURL(blob);
+    if (!res.ok) { if (onend) onend(); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.onended = () => { URL.revokeObjectURL(url); if (onend) onend(); };
     audio.onerror = () => { URL.revokeObjectURL(url); if (onend) onend(); };
-    audio.play();
+    await audio.play().catch(() => null);
   } catch (e) {
-    console.error('TTS mooré erreur:', e);
+    console.error('TTS erreur:', e);
     if (onend) onend();
   }
 }
@@ -252,9 +237,12 @@ function AgentApp() {
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState('');
   const [inputLang, setInputLang] = useState('Français');
-  const [mode, setMode] = useState('gratuit'); // 'gratuit' | 'premium'
-  const modeRef = useRef('gratuit');
+  const [mode, setMode] = useState('llama'); // 'gratuit' | 'premium' | 'llama'
+  const modeRef = useRef('llama');
+  const [asrModel, setAsrModel] = useState('whisper'); // 'whisper' | 'mms'
+  const asrModelRef = useRef('whisper');
   useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { asrModelRef.current = asrModel; }, [asrModel]);
   const [voice, setVoice] = useState('aine');
   const [vmOpen, setVmOpen] = useState(false);
   const [vmText, setVmText] = useState('');
@@ -301,21 +289,9 @@ function AgentApp() {
 
   const speak = useCallback((text, lang, onend) => {
     if (!text) { if (onend) onend(); return; }
-    // L'Aîné → notre TTS mooré
-    if (voice === 'aine') {
-      speakMoore(text, onend);
-      return;
-    }
-    // Autres voix → browser TTS
-    try {
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'fr-FR';
-      u.rate = 0.9;
-      if (onend) u.onend = onend;
-      synth.speak(u);
-    } catch (e) { if (onend) setTimeout(onend, 1800); }
-  }, [synth, voice]);
+    // Toutes les voix → XTTS fine-tuné via /api/synthesize
+    speakVoice(text, voice, onend);
+  }, [voice]);
 
   const replay = useCallback((m) => {
     setPlayingId(m.id);
@@ -337,16 +313,20 @@ function AgentApp() {
     let respLang = userLang || 'Français';
 
     // Appel API principal
-    const callAPI = (overrideMode) => fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: userText,
-        lang: userLang,
-        history: historyRef.current.slice(-8),
-        mode: overrideMode || modeRef.current,
-      }),
-    }).then(r => r.json());
+    const callAPI = (overrideMode) => {
+      const effectiveMode = overrideMode || modeRef.current;
+      return fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userText,
+          lang: userLang,
+          history: historyRef.current.slice(-8),
+          mode: effectiveMode,
+          model: effectiveMode === 'llama' ? 'llama' : undefined,
+        }),
+      }).then(r => r.json());
+    };
 
     // Fallback vers Claude Haiku si le Space premium est indisponible
     const fallbackToGratuit = async () => {
@@ -561,7 +541,8 @@ function AgentApp() {
 
       const fd = new FormData();
       fd.append('audio', audioBlob, audioBlob.type === 'audio/wav' ? 'recording.wav' : 'recording.webm');
-      fd.append('lang', inputLangRef.current);
+      fd.append('input_lang', inputLangRef.current);
+      fd.append('asr_model', asrModelRef.current);
 
       // Étape 1 : Vercel lance la transcription et retourne event_id
       const res = await fetch('/api/transcribe', { method: 'POST', body: fd });
@@ -781,10 +762,16 @@ function AgentApp() {
             <div className="panel-title">Modèle IA</div>
             <div className="pills">
               <button
+                className={'pill premium' + (mode === 'llama' ? ' active' : '')}
+                onClick={() => setMode('llama')}
+                title="Llama 3.1 via Groq — très rapide">
+                Llama (Meta)
+              </button>
+              <button
                 className={'pill' + (mode === 'gratuit' ? ' active' : '')}
                 onClick={() => setMode('gratuit')}
-                title="Claude Haiku — rapide, gratuit">
-                Gratuit
+                title="Claude Haiku — fallback">
+                Claude
               </button>
               <button
                 className={'pill premium' + (mode === 'premium' ? ' active' : '')}
@@ -794,7 +781,28 @@ function AgentApp() {
               </button>
             </div>
             <div className="model-hint">
-              {mode === 'gratuit' ? 'Claude Haiku · réponse ~2s' : 'Mistral mooré fine-tuné · réponse ~4s'}
+              {mode === 'llama' ? 'Llama 3.1 · via Groq · ~1s' : mode === 'gratuit' ? 'Claude Haiku · ~2s' : 'Mistral mooré fine-tuné · ~4s'}
+            </div>
+          </div>
+
+          <div className="panel-section">
+            <div className="panel-title">ASR mooré</div>
+            <div className="pills">
+              <button
+                className={'pill' + (asrModel === 'whisper' ? ' active' : '')}
+                onClick={() => setAsrModel('whisper')}
+                title="Whisper fine-tuné — voix propre (recommandé)">
+                Whisper 37.9%
+              </button>
+              <button
+                className={'pill' + (asrModel === 'mms' ? ' active' : '')}
+                onClick={() => setAsrModel('mms')}
+                title="MMS fine-tuné Savane TV — discours radio/TV">
+                MMS 26.4%
+              </button>
+            </div>
+            <div className="model-hint">
+              {asrModel === 'whisper' ? 'Whisper · voix propre / téléphone' : 'MMS · discours radio / TV'}
             </div>
           </div>
 
